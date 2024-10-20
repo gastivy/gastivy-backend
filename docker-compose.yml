@@ -1,0 +1,16 @@
+services:
+  postgres-db:
+    image: postgres:14
+    container_name: postgresql
+    restart: always
+    environment:
+      POSTGRES_USER: gastivy_author
+      POSTGRES_PASSWORD: gastivypassword
+      POSTGRES_DB: gastivy-db
+    ports:
+      - "5432:5432"
+    networks:
+      - local_network
+networks:
+  local_network:
+    driver: bridge
