@@ -15,7 +15,7 @@ async function bootstrap() {
     origin: ['http://localhost:3000/'], // Replace with actual frontend URLs
     methods: 'GET,POST,PUT,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization',
-    // credentials: true, // Include credentials if needed (cookies, etc.)
+    credentials: false, // Include credentials if needed (cookies, etc.)
   });
 
   // Apply CORS middleware globally
