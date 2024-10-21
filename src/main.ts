@@ -19,7 +19,10 @@ async function bootstrap() {
     new NotFoundExceptionFilter(),
   );
 
-  app.enableCors();
+  app.enableCors({
+    origin: 'localhost:3000',
+    credentials: true,
+  });
 
   await app.listen(3000);
 }
