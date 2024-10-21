@@ -12,10 +12,10 @@ import { CorsMiddleware } from './middleware/cors.middleware';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: ['http://localhost:3000/'], // Replace with actual frontend URLs
+    origin: ['http://localhost:3000'], // Replace with actual frontend URLs
     methods: 'GET,POST,PUT,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization',
-    credentials: false, // Include credentials if needed (cookies, etc.)
+    credentials: true, // Include credentials if needed (cookies, etc.)
   });
 
   // Apply CORS middleware globally
