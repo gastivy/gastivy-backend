@@ -19,6 +19,8 @@ async function bootstrap() {
     new NotFoundExceptionFilter(),
   );
 
+  app.enableCors();
+
   await app.listen(3000);
 }
 bootstrap();
