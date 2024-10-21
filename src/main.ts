@@ -7,7 +7,6 @@ import {
   NotFoundExceptionFilter,
   UnauthorizedExceptionFilter,
 } from './common/execptions/exceptions';
-import { CorsMiddleware } from './middleware/cors.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,7 +18,6 @@ async function bootstrap() {
   });
 
   // Apply CORS middleware globally
-  app.use(CorsMiddleware);
 
   app.useGlobalPipes(new ValidationPipe()); // Enable validation globally
 
