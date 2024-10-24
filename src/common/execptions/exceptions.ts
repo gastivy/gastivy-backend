@@ -8,6 +8,10 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 
+interface BadRequestExceptionResponse {
+  message?: string[] | string;
+}
+
 // Bad Request - 400
 @Catch(BadRequestException)
 export class BadRequestExceptionFilter implements ExceptionFilter {
@@ -16,10 +20,16 @@ export class BadRequestExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const status = exception.getStatus();
 
+    const responseException =
+      exception.getResponse() as Partial<BadRequestExceptionResponse>;
+    const message = Array.isArray(responseException.message)
+      ? responseException.message[0]
+      : responseException.message;
+
     response.status(status).json({
       code: status,
-      message: exception.message,
-      data: null,
+      message: message,
+      error: 'Bad Request',
     });
   }
 }

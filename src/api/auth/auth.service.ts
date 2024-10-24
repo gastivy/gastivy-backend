@@ -1,7 +1,7 @@
 import {
   ConflictException,
   Injectable,
-  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { User } from '../user/user.entity';
 import { Repository } from 'typeorm';
@@ -42,13 +42,13 @@ export class AuthService {
     const user = await this.authRepository.findOneBy({ email: body.email });
 
     if (!user) {
-      throw new UnauthorizedException("Email doesn't exists");
+      throw new NotFoundException("Email doesn't exists");
     }
 
     const isPasswordValid = await bcrypt.compare(body.password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new NotFoundException('Invalid credentials');
     }
 
     const token = this.jwtService.sign(
