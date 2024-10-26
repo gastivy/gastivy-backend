@@ -17,7 +17,7 @@ export class JwtMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const token = req.headers['authorization']?.split(' ');
 
-    if (token.length !== 2 || token[0] !== 'Bearer' || !token[1]) {
+    if (token?.length !== 2 || token?.[0] !== 'Bearer' || !token?.[1]) {
       throw new UnauthorizedException('Token is missing');
     }
 
@@ -28,7 +28,6 @@ export class JwtMiddleware implements NestMiddleware {
       });
       req['user'] = decoded; // Attach the decoded user info to the request object
     } catch (error) {
-      console.log('ERROR NIH: ', error);
       if (error instanceof TokenExpiredError) {
         throw new UnauthorizedException(
           'Token has expired. Please log in again.',
