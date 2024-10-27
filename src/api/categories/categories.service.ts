@@ -43,26 +43,19 @@ export class CategoriesService {
     userId: string,
     categoryId: string,
   ): Promise<Categories> {
-    try {
-      const response = await this.categoryRepository.findOne({
-        where: { user_id: userId, id: categoryId },
-      });
+    const response = await this.categoryRepository.findOne({
+      where: { user_id: userId, id: categoryId },
+    });
 
-      if (!response) {
-        throw new NotFoundException('Category not found');
-      }
-
-      return {
-        ...response,
-        created_at: dateTime.convertUTCToLocalTime(response.created_at),
-        updated_at: dateTime.convertUTCToLocalTime(response.updated_at),
-      };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException('User not found');
-      }
-      throw error;
+    if (!response) {
+      throw new NotFoundException('Category not found');
     }
+
+    return {
+      ...response,
+      created_at: dateTime.convertUTCToLocalTime(response.created_at),
+      updated_at: dateTime.convertUTCToLocalTime(response.updated_at),
+    };
   }
 
   async create(body: CreateCategoryDto, user_id: string) {
