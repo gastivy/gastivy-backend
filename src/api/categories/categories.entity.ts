@@ -17,6 +17,9 @@ export class Categories {
   @Column({ length: 30 })
   name: string;
 
+  @Column({ type: 'integer' })
+  target: number;
+
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
