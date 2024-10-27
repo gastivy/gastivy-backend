@@ -5,6 +5,7 @@ import { In, Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
 import { User } from '../user/user.entity';
+import { dateTime } from 'src/utils/dateTime';
 
 @Injectable()
 export class CategoriesService {
@@ -15,7 +16,7 @@ export class CategoriesService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async findByUserId(id: string): Promise<Categories[]> {
+  async findAll(id: string): Promise<Categories[]> {
     try {
       const response = await this.categoryRepository.find({
         where: { user_id: id },
@@ -25,7 +26,37 @@ export class CategoriesService {
         throw new NotFoundException('Category not found');
       }
 
-      return response;
+      return response.map((res) => ({
+        ...res,
+        created_at: dateTime.convertUTCToLocalTime(res.created_at),
+        updated_at: dateTime.convertUTCToLocalTime(res.updated_at),
+      }));
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException('User not found');
+      }
+      throw error;
+    }
+  }
+
+  async findByCategoryId(
+    userId: string,
+    categoryId: string,
+  ): Promise<Categories> {
+    try {
+      const response = await this.categoryRepository.findOne({
+        where: { user_id: userId, id: categoryId },
+      });
+
+      if (!response) {
+        throw new NotFoundException('Category not found');
+      }
+
+      return {
+        ...response,
+        created_at: dateTime.convertUTCToLocalTime(response.created_at),
+        updated_at: dateTime.convertUTCToLocalTime(response.updated_at),
+      };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException('User not found');
@@ -39,47 +70,27 @@ export class CategoriesService {
       ...body,
       user_id,
     });
-    return await this.categoryRepository.save(category);
+    await this.categoryRepository.save(category);
   }
 
-  async update(body: UpdateCategoryDto, user_id: string) {
-    const user = await this.userRepository.findOneBy({ id: user_id });
+  async update(body: UpdateCategoryDto, userId: string) {
+    const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) {
-      throw new NotFoundException(`User with ID: ${user_id} Not Found`);
+      throw new NotFoundException(`User with ID: ${userId} Not Found`);
     }
 
-    // Category Ids from Body Request
-    const categoryIds = body.categories.map((cat) => cat.id);
-
-    // Find existing category user
-    const existingCategoryUser = await this.categoryRepository.findBy({
-      id: In(categoryIds),
+    const categoryUser = await this.categoryRepository.findOne({
+      where: {
+        id: body.id,
+        user_id: userId,
+      },
     });
-    const existingCategoryIds = existingCategoryUser.map(
-      (category) => category.id,
-    );
 
-    // Check for not found categories
-    const notFoundIds = categoryIds.filter(
-      (id) => !existingCategoryIds.includes(id),
-    );
-    if (notFoundIds.length) {
-      throw new NotFoundException(
-        `Categories with ID ${notFoundIds.join(', ')} not found`,
-      );
+    if (!categoryUser) {
+      throw new NotFoundException('Category not found');
     }
 
-    // Update the categories in Bulk
-    const updatedCategories = existingCategoryUser.map((category) => {
-      const categoryData = body.categories.find(
-        (data) => data.id === category.id,
-      );
-      if (categoryData) category.name = categoryData.name;
-      return category;
-    });
-
-    await this.categoryRepository.save(updatedCategories);
-    return updatedCategories;
+    await this.categoryRepository.save(body);
   }
 
   async delete(categoryIds: string[], user_id: string): Promise<void> {

@@ -3,49 +3,53 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Patch,
   Post,
   Req,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { CategoriesService } from './categories.service';
 import { Categories } from './categories.entity';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
 import { DeleteCategoryDto } from './dto/delete-category';
+import { getUserId } from 'src/utils/getUserId';
 
 @Controller('categories')
 export class CategoriesController {
-  constructor(
-    private readonly service: CategoriesService,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private readonly service: CategoriesService) {}
 
   @Get()
   async getCategories(@Req() request: Request): Promise<Categories[]> {
-    const token = request.headers['authorization'].split(' ')[1];
-    const userId = this.jwtService.decode(token).id;
-    return this.service.findByUserId(userId);
+    const userId = getUserId(request);
+    return this.service.findAll(userId);
+  }
+
+  @Get(':categoryId')
+  async getDetailCategory(
+    @Req() request: Request,
+    @Param() { categoryId }: { categoryId: string },
+  ): Promise<Categories> {
+    const userId = getUserId(request);
+    return this.service.findByCategoryId(userId, categoryId);
   }
 
   @Post('/create')
   async createCategory(
     @Body() body: CreateCategoryDto,
     @Req() request: Request,
-  ): Promise<Categories> {
-    const token = request.headers['authorization'].split(' ')[1];
-    const id = this.jwtService.decode(token).id;
-    return this.service.create(body, id);
+  ): Promise<void> {
+    const userId = getUserId(request);
+    this.service.create(body, userId);
   }
 
   @Patch('/save')
   async updateCategory(
     @Body() body: UpdateCategoryDto,
     @Req() request: Request,
-  ) {
-    const token = request.headers['authorization'].split(' ')[1];
-    const id = this.jwtService.decode(token).id;
-    return this.service.update(body, id);
+  ): Promise<void> {
+    const userId = getUserId(request);
+    return this.service.update(body, userId);
   }
 
   @Delete('/delete')
@@ -53,8 +57,7 @@ export class CategoriesController {
     @Body() body: DeleteCategoryDto,
     @Req() request: Request,
   ) {
-    const token = request.headers['authorization'].split(' ')[1];
-    const id = this.jwtService.decode(token).id;
-    return this.service.delete(body.categoryIds, id);
+    const userId = getUserId(request);
+    return this.service.delete(body.categoryIds, userId);
   }
 }

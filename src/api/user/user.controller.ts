@@ -1,19 +1,15 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
-import { JwtService } from '@nestjs/jwt';
+import { getUserId } from 'src/utils/getUserId';
 
 @Controller('user')
 export class UserController {
-  constructor(
-    private readonly service: UserService,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private readonly service: UserService) {}
 
   @Get()
   async getUser(@Req() request: Request): Promise<Omit<User, 'password'>> {
-    const token = request.headers['authorization'].split(' ')[1];
-    const id = this.jwtService.decode(token).id;
-    return this.service.findById(id);
+    const userId = getUserId(request);
+    return this.service.findById(userId);
   }
 }

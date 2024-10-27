@@ -8,7 +8,6 @@ export class ActivityController {
 
   @Post('/create')
   async createActivity(@Body() body: Activity): Promise<Activity> {
-    console.log('BODY: ', body);
     return this.service.create(body);
   }
 
