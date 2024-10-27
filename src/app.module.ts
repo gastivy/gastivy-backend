@@ -22,7 +22,6 @@ import { Activity } from './api/activity/activity.entity';
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
       entities: [User, Categories, Activity],
-      synchronize: true,
       keepConnectionAlive: true,
     }),
     JwtSharedModule,
