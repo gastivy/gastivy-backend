@@ -41,10 +41,6 @@ export class CategoriesService {
       ...(startDate && endDate && { start_date: Between(startDate, endDate) }),
     });
 
-    if (!activities.length) {
-      throw new NotFoundException('Activities not found');
-    }
-
     /**
      * Return Activity with range `seconds`
      *
