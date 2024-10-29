@@ -6,14 +6,20 @@ export class Activity {
   id: string;
 
   @Column({ type: 'uuid' })
+  user_id: string;
+
+  @Column({ type: 'uuid' })
   category_id: string;
 
   @Column({ type: 'timestamptz' })
   start_date: Date;
 
-  @Column({ type: 'int' })
-  time: number;
-
   @Column({ type: 'timestamptz' })
   end_date: Date;
+
+  @Column({ type: 'boolean' })
+  is_done: boolean;
+
+  @Column({ length: 2000 })
+  description: string;
 }

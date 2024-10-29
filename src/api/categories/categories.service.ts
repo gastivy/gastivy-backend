@@ -5,7 +5,6 @@ import { In, Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
 import { User } from '../user/user.entity';
-import { dateTime } from 'src/utils/dateTime';
 
 @Injectable()
 export class CategoriesService {
@@ -26,11 +25,7 @@ export class CategoriesService {
         throw new NotFoundException('Category not found');
       }
 
-      return response.map((res) => ({
-        ...res,
-        created_at: dateTime.convertUTCToLocalTime(res.created_at),
-        updated_at: dateTime.convertUTCToLocalTime(res.updated_at),
-      }));
+      return response;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException('User not found');
@@ -51,11 +46,7 @@ export class CategoriesService {
       throw new NotFoundException('Category not found');
     }
 
-    return {
-      ...response,
-      created_at: dateTime.convertUTCToLocalTime(response.created_at),
-      updated_at: dateTime.convertUTCToLocalTime(response.updated_at),
-    };
+    return response;
   }
 
   async create(body: CreateCategoryDto, user_id: string) {
