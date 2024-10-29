@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Categories } from './categories.entity';
-import { In, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
 import { User } from '../user/user.entity';
+import { Activity } from '../activity/activity.entity';
+import { dateTime } from 'src/utils/dateTime';
 
 @Injectable()
 export class CategoriesService {
@@ -13,25 +15,52 @@ export class CategoriesService {
     private readonly categoryRepository: Repository<Categories>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Activity)
+    private readonly activityRepository: Repository<Activity>,
   ) {}
 
-  async findAll(id: string): Promise<Categories[]> {
-    try {
-      const response = await this.categoryRepository.find({
-        where: { user_id: id },
-      });
+  async findAll(
+    userId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<Categories[]> {
+    const categories = await this.categoryRepository.find({
+      where: { user_id: userId },
+    });
 
-      if (!response) {
-        throw new NotFoundException('Category not found');
-      }
-
-      return response;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException('User not found');
-      }
-      throw error;
+    if (!categories) {
+      throw new NotFoundException('Category not found');
     }
+
+    const idCategories = categories.map((cat) => cat.id);
+
+    // Find All Activity by start_date & end_date
+    const activities = await this.activityRepository.findBy({
+      category_id: In(idCategories),
+      user_id: userId,
+      ...(startDate && endDate && { start_date: Between(startDate, endDate) }),
+    });
+
+    /**
+     * Return Activity with range `seconds`
+     *
+     * [
+     *  { category_id: 1212, seconds: 200 },
+     *  { category_id: 1211, seconds: 400 },
+     * ]
+     */
+    const totalActivity = dateTime.calculateSecondsByCategory(
+      activities.map((item) => ({
+        category_id: item.category_id,
+        seconds: dateTime.getRangeInSeconds(item.start_date, item.end_date),
+      })),
+    );
+
+    return categories.map((item) => ({
+      ...item,
+      seconds: totalActivity[item.id] || 0,
+      minutes: Math.floor(totalActivity[item.id] / 60) || 0,
+    }));
   }
 
   async findByCategoryId(

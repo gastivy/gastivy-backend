@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
@@ -20,9 +21,13 @@ export class CategoriesController {
   constructor(private readonly service: CategoriesService) {}
 
   @Get()
-  async getCategories(@Req() request: Request): Promise<Categories[]> {
+  async getCategories(
+    @Req() request: Request,
+    @Query('start_date') start_date?: Date,
+    @Query('end_date') end_date?: Date,
+  ): Promise<Categories[]> {
     const userId = getUserId(request);
-    return this.service.findAll(userId);
+    return this.service.findAll(userId, start_date, end_date);
   }
 
   @Get(':categoryId')
