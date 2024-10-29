@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { CreateActivityDto } from './dto/create-activity';
 import { Activity } from './activity.entity';
+import { dateTime } from 'src/utils/dateTime';
 
 @Injectable()
 export class ActivityService {
@@ -20,6 +21,10 @@ export class ActivityService {
       activity.end_date = act.end_date;
       activity.description = act.description;
       activity.is_done = act.is_done;
+      activity.seconds = dateTime.getRangeInSeconds(
+        act.start_date,
+        act.end_date,
+      );
       return activity;
     });
     const activity = this.activityRepository.create(activities);

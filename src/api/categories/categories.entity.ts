@@ -20,6 +20,9 @@ export class Categories {
   @Column({ type: 'integer' })
   target: number;
 
+  seconds?: number;
+  minutes?: number;
+
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 

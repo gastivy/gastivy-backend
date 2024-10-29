@@ -20,6 +20,9 @@ export class Activity {
   @Column({ type: 'boolean' })
   is_done: boolean;
 
+  @Column({ type: 'integer' })
+  seconds: number;
+
   @Column({ length: 2000 })
   description: string;
 }

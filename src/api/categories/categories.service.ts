@@ -41,6 +41,10 @@ export class CategoriesService {
       ...(startDate && endDate && { start_date: Between(startDate, endDate) }),
     });
 
+    if (!activities.length) {
+      throw new NotFoundException('Activities not found');
+    }
+
     /**
      * Return Activity with range `seconds`
      *
@@ -49,12 +53,7 @@ export class CategoriesService {
      *  { category_id: 1211, seconds: 400 },
      * ]
      */
-    const totalActivity = dateTime.calculateSecondsByCategory(
-      activities.map((item) => ({
-        category_id: item.category_id,
-        seconds: dateTime.getRangeInSeconds(item.start_date, item.end_date),
-      })),
-    );
+    const totalActivity = dateTime.calculateSecondsByCategory(activities);
 
     return categories.map((item) => ({
       ...item,
