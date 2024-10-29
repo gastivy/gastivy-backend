@@ -20,10 +20,6 @@ export class CreateActivityDto {
 export class ActivityData {
   @IsUUID()
   @IsNotEmpty()
-  user_id: string;
-
-  @IsUUID()
-  @IsNotEmpty()
   category_id: string;
 
   @IsDateString()
