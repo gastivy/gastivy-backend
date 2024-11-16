@@ -21,8 +21,8 @@ export class CategoriesService {
 
   async findAll(
     userId: string,
-    startDate?: Date,
-    endDate?: Date,
+    start?: Date,
+    end?: Date,
   ): Promise<Categories[]> {
     const categories = await this.categoryRepository.find({
       where: { user_id: userId },
@@ -33,10 +33,16 @@ export class CategoriesService {
     }
 
     const idCategories = categories.map((cat) => cat.id);
+    const startDate = start && new Date(start);
+    const endDate = end && new Date(end);
+    if (start && end) {
+      endDate.setHours(23, 59, 59, 999);
+    }
 
     // Find All Activity by start_date & end_date
     const activities = await this.activityRepository.findBy({
       category_id: In(idCategories),
+      is_deleted: false,
       user_id: userId,
       ...(startDate && endDate && { start_date: Between(startDate, endDate) }),
     });

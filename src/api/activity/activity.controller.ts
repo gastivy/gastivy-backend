@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { Activity } from './activity.entity';
 import { CreateActivityDto } from './dto/create-activity';
@@ -20,11 +29,20 @@ export class ActivityController {
   @Get()
   async getAllActivity(
     @Req() request: Request,
-    @Query('category_id') category_id: string,
+    @Query('category_id') category_id?: string[],
     @Query('start_date') start_date?: Date,
     @Query('end_date') end_date?: Date,
   ) {
     const userId = getUserId(request);
     return this.service.getAll(userId, category_id, start_date, end_date);
+  }
+
+  @Delete(':activityId')
+  async deleteActivity(
+    @Req() request: Request,
+    @Param('activityId') activityId: string,
+  ) {
+    const userId = getUserId(request);
+    return this.service.softDelete(userId, activityId);
   }
 }

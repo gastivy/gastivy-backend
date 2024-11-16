@@ -23,6 +23,14 @@ export class Activity {
   @Column({ type: 'integer' })
   seconds: number;
 
+  @Column({ default: false })
+  is_deleted: boolean;
+
+  @Column({ type: 'timestamptz' })
+  deleted_at: Date;
+
   @Column({ length: 2000 })
   description: string;
+
+  category_name?: string;
 }
