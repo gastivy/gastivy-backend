@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Categories } from '../categories/categories.entity';
 
 @Entity()
 export class Activity {
@@ -8,7 +15,7 @@ export class Activity {
   @Column({ type: 'uuid' })
   user_id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'category_id' })
   category_id: string;
 
   @Column({ type: 'timestamptz' })
@@ -33,4 +40,8 @@ export class Activity {
   description: string;
 
   category_name?: string;
+
+  @ManyToOne(() => Categories, (category) => category.activity)
+  @JoinColumn({ name: 'category_id' })
+  category: Categories;
 }

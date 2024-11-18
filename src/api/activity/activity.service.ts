@@ -5,6 +5,7 @@ import { CreateActivityDto } from './dto/create-activity';
 import { Activity } from './activity.entity';
 import { dateTime } from 'src/utils/dateTime';
 import { Categories } from '../categories/categories.entity';
+import { UpdateActivityDto } from './dto/update-activity';
 
 @Injectable()
 export class ActivityService {
@@ -84,6 +85,19 @@ export class ActivityService {
       ...response,
       is_deleted: true,
       deleted_at: new Date(),
+    });
+  }
+
+  async update(user_id: string, id: string, body: UpdateActivityDto) {
+    const response = await this.activityRepository.findOne({
+      where: { user_id, id, is_deleted: false },
+    });
+
+    if (!response) throw new NotFoundException('Activity not found');
+
+    await this.activityRepository.save({
+      ...response,
+      ...body,
     });
   }
 }

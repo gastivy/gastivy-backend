@@ -4,7 +4,9 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Activity } from '../activity/activity.entity';
 
 @Entity()
 export class Categories {
@@ -28,4 +30,7 @@ export class Categories {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
+
+  @OneToMany(() => Activity, (activity) => activity.category)
+  activity: Activity[];
 }

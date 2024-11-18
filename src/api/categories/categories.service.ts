@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Categories } from './categories.entity';
-import { Between, In, Repository } from 'typeorm';
+import { Between, DataSource, In, Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
 import { User } from '../user/user.entity';
@@ -11,6 +11,8 @@ import { dateTime } from 'src/utils/dateTime';
 @Injectable()
 export class CategoriesService {
   constructor(
+    private readonly dataSource: DataSource,
+
     @InjectRepository(Categories)
     private readonly categoryRepository: Repository<Categories>,
     @InjectRepository(User)
@@ -32,7 +34,6 @@ export class CategoriesService {
       throw new NotFoundException('Category not found');
     }
 
-    const idCategories = categories.map((cat) => cat.id);
     const startDate = start && new Date(start);
     const endDate = end && new Date(end);
     if (start && end) {
@@ -40,12 +41,18 @@ export class CategoriesService {
     }
 
     // Find All Activity by start_date & end_date
-    const activities = await this.activityRepository.findBy({
-      category_id: In(idCategories),
-      is_deleted: false,
-      user_id: userId,
-      ...(startDate && endDate && { start_date: Between(startDate, endDate) }),
+    const activities = await this.activityRepository.find({
+      where: {
+        user_id: userId,
+        is_deleted: false,
+        ...(startDate &&
+          endDate && { start_date: Between(startDate, endDate) }),
+      },
     });
+
+    if (!activities) {
+      throw new NotFoundException('Category not found');
+    }
 
     /**
      * Return Activity with range `seconds`
@@ -71,6 +78,22 @@ export class CategoriesService {
     const response = await this.categoryRepository.findOne({
       where: { user_id: userId, id: categoryId },
     });
+
+    if (!response) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return response;
+  }
+
+  async listCategory(userId: string): Promise<Categories[]> {
+    const response = await this.dataSource
+      .getRepository(Categories)
+      .createQueryBuilder('category')
+      .select('category.id', 'id')
+      .addSelect('category.name', 'name')
+      .where('category.user_id = :userId', { userId })
+      .getRawMany();
 
     if (!response) {
       throw new NotFoundException('Category not found');

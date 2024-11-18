@@ -30,6 +30,12 @@ export class CategoriesController {
     return this.service.findAll(userId, start_date, end_date);
   }
 
+  @Get('/list')
+  async getListCategory(@Req() request: Request): Promise<Categories[]> {
+    const userId = getUserId(request);
+    return this.service.listCategory(userId);
+  }
+
   @Get(':categoryId')
   async getDetailCategory(
     @Req() request: Request,
@@ -39,7 +45,7 @@ export class CategoriesController {
     return this.service.findByCategoryId(userId, categoryId);
   }
 
-  @Post('/create')
+  @Post()
   async createCategory(
     @Body() body: CreateCategoryDto,
     @Req() request: Request,
@@ -48,7 +54,7 @@ export class CategoriesController {
     this.service.create(body, userId);
   }
 
-  @Patch('/save')
+  @Patch()
   async updateCategory(
     @Body() body: UpdateCategoryDto,
     @Req() request: Request,
@@ -57,7 +63,7 @@ export class CategoriesController {
     return this.service.update(body, userId);
   }
 
-  @Delete('/delete')
+  @Delete()
   async deleteCategory(
     @Body() body: DeleteCategoryDto,
     @Req() request: Request,

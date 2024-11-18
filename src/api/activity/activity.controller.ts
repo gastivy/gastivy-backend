@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -12,6 +13,7 @@ import { ActivityService } from './activity.service';
 import { Activity } from './activity.entity';
 import { CreateActivityDto } from './dto/create-activity';
 import { getUserId } from 'src/utils/getUserId';
+import { UpdateActivityDto } from './dto/update-activity';
 
 @Controller('activity')
 export class ActivityController {
@@ -44,5 +46,15 @@ export class ActivityController {
   ) {
     const userId = getUserId(request);
     return this.service.softDelete(userId, activityId);
+  }
+
+  @Patch(':activityId')
+  async updateActivity(
+    @Req() request: Request,
+    @Param('activityId') activityId: string,
+    @Body() body: UpdateActivityDto,
+  ) {
+    const userId = getUserId(request);
+    return this.service.update(userId, activityId, body);
   }
 }
