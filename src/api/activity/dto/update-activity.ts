@@ -3,13 +3,13 @@ import {
   IsDateString,
   IsNotEmpty,
   IsNumber,
-  IsString,
+  IsUUID,
 } from 'class-validator';
 
 export class UpdateActivityDto {
+  @IsUUID()
   @IsNotEmpty()
-  @IsString()
-  category_name: string;
+  category_id: string;
 
   @IsBoolean()
   is_done: boolean;

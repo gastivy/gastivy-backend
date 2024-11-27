@@ -19,7 +19,7 @@ import { UpdateActivityDto } from './dto/update-activity';
 export class ActivityController {
   constructor(private readonly service: ActivityService) {}
 
-  @Post('/create')
+  @Post()
   async createActivity(
     @Body() body: CreateActivityDto,
     @Req() request: Request,
