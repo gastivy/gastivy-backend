@@ -44,7 +44,7 @@ export class CategoriesService {
     const activities = await this.activityRepository.find({
       where: {
         user_id: userId,
-        is_deleted: false,
+        deleted_at: null,
         ...(startDate &&
           endDate && { start_date: Between(startDate, endDate) }),
       },

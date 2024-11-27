@@ -59,7 +59,7 @@ export class ActivityService {
     const activities = await this.activityRepository.find({
       where: {
         user_id: userId,
-        is_deleted: false,
+        deleted_at: null,
         ...(categoryId && { category_id: In(categoryId) }),
         ...(start && end && { start_date: Between(startDate, endDate) }),
       },
@@ -76,7 +76,7 @@ export class ActivityService {
 
   async softDelete(user_id: string, id: string) {
     const response = await this.activityRepository.findOne({
-      where: { user_id, id, is_deleted: false },
+      where: { user_id, id, deleted_at: null },
     });
 
     if (!response) throw new NotFoundException('Activity not found');
@@ -90,7 +90,7 @@ export class ActivityService {
 
   async update(user_id: string, id: string, body: UpdateActivityDto) {
     const response = await this.activityRepository.findOne({
-      where: { user_id, id, is_deleted: false },
+      where: { user_id, id, deleted_at: null },
     });
 
     if (!response) throw new NotFoundException('Activity not found');
