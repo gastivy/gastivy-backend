@@ -64,7 +64,7 @@ export class ActivityService {
         ...(start && end && { start_date: Between(startDate, endDate) }),
       },
       order: {
-        start_date: 'ASC',
+        start_date: 'DESC',
       },
     });
 

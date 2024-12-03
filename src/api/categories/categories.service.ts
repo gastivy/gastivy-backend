@@ -1,12 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Categories } from './categories.entity';
-import { Between, DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
 import { User } from '../user/user.entity';
 import { Activity } from '../activity/activity.entity';
-import { dateTime } from 'src/utils/dateTime';
 
 @Injectable()
 export class CategoriesService {
@@ -40,34 +39,34 @@ export class CategoriesService {
       endDate.setHours(23, 59, 59, 999);
     }
 
-    // Find All Activity by start_date & end_date
-    const activities = await this.activityRepository.find({
-      where: {
-        user_id: userId,
-        deleted_at: null,
-        ...(startDate &&
-          endDate && { start_date: Between(startDate, endDate) }),
-      },
-    });
+    const queryCategory = this.categoryRepository
+      .createQueryBuilder('category')
+      .leftJoin('category.activity', 'activity')
+      .select('category.id', 'id')
+      .addSelect('category.name', 'name')
+      .addSelect('category.target', 'target')
+      .addSelect('SUM(activity.seconds)', 'seconds')
+      .where('category.user_id = :userId', { userId })
+      .where('activity.deleted_at IS NULL')
+      .groupBy('category.id')
+      .addGroupBy('category.name');
 
-    if (!activities) {
-      throw new NotFoundException('Category not found');
+    if (startDate !== undefined && endDate !== undefined) {
+      queryCategory.andWhere(
+        'activity.start_date IS NULL OR (activity.start_date BETWEEN :start AND :end)',
+        {
+          start: startDate,
+          end: endDate,
+        },
+      );
     }
 
-    /**
-     * Return Activity with range `seconds`
-     *
-     * [
-     *  { category_id: 1212, seconds: 200 },
-     *  { category_id: 1211, seconds: 400 },
-     * ]
-     */
-    const totalActivity = dateTime.calculateSecondsByCategory(activities);
+    const category = await queryCategory.getRawMany();
 
-    return categories.map((item) => ({
+    return category.map((item) => ({
       ...item,
-      seconds: totalActivity[item.id] || 0,
-      minutes: Math.floor(totalActivity[item.id] / 60) || 0,
+      seconds: Number(item.seconds),
+      minutes: Math.floor(item.seconds / 60),
     }));
   }
 
