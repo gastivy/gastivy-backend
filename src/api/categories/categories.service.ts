@@ -42,23 +42,31 @@ export class CategoriesService {
     const queryCategory = this.categoryRepository
       .createQueryBuilder('category')
       .leftJoin('category.activity', 'activity')
-      .select('category.id', 'id')
-      .addSelect('category.name', 'name')
-      .addSelect('category.target', 'target')
-      .addSelect('SUM(activity.seconds)', 'seconds')
+      .select([
+        'category.id AS id',
+        'category.name AS name',
+        'category.target AS target',
+        `COALESCE(SUM(
+          CASE
+            WHEN activity.deleted_at IS NULL
+            ${
+              startDate && endDate
+                ? `AND (activity.start_date IS NULL OR (activity.start_date BETWEEN :start AND :end))`
+                : ''
+            }
+            THEN activity.seconds
+              ELSE 0 END), 0) AS seconds`,
+      ])
       .where('category.user_id = :userId', { userId })
-      .where('activity.deleted_at IS NULL')
       .groupBy('category.id')
-      .addGroupBy('category.name');
+      .addGroupBy('category.name')
+      .addGroupBy('category.target');
 
     if (startDate !== undefined && endDate !== undefined) {
-      queryCategory.andWhere(
-        'activity.start_date IS NULL OR (activity.start_date BETWEEN :start AND :end)',
-        {
-          start: startDate,
-          end: endDate,
-        },
-      );
+      queryCategory.setParameters({
+        start: startDate,
+        end: endDate,
+      });
     }
 
     const category = await queryCategory.getRawMany();
