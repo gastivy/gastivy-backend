@@ -7,6 +7,7 @@ import { JwtMiddleware } from './middleware/jwt.middleware';
 import { JwtSharedModule } from './common/modules/jwt.shared.module';
 import { CategoriesModule } from './api/activity-app/categories/categories.module';
 import { ActivityModule } from './api/activity-app/activity/activity.module';
+import { CategoriesTransactionsModule } from './api/finance-app/categories/categories.module';
 import typeorm from './config/typeorm';
 
 @Module({
@@ -21,6 +22,7 @@ import typeorm from './config/typeorm';
     UserModule,
     AuthModule,
     CategoriesModule,
+    CategoriesTransactionsModule,
     ActivityModule,
   ],
   controllers: [],
