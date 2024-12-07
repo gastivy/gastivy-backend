@@ -15,7 +15,7 @@ import { CreateActivityDto } from './dto/create-activity';
 import { getUserId } from 'src/utils/getUserId';
 import { UpdateActivityDto } from './dto/update-activity';
 
-@Controller('activity')
+@Controller('/activity-app/activity')
 export class ActivityController {
   constructor(private readonly service: ActivityService) {}
 

@@ -16,7 +16,7 @@ import { UpdateCategoryDto } from './dto/update-category';
 import { DeleteCategoryDto } from './dto/delete-category';
 import { getUserId } from 'src/utils/getUserId';
 
-@Controller('categories')
+@Controller('/activity-app/categories')
 export class CategoriesController {
   constructor(private readonly service: CategoriesService) {}
 

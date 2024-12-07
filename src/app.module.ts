@@ -5,8 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtMiddleware } from './middleware/jwt.middleware';
 import { JwtSharedModule } from './common/modules/jwt.shared.module';
-import { CategoriesModule } from './api/categories/categories.module';
-import { ActivityModule } from './api/activity/activity.module';
+import { CategoriesModule } from './api/activity-app/categories/categories.module';
+import { ActivityModule } from './api/activity-app/activity/activity.module';
 import typeorm from './config/typeorm';
 
 @Module({

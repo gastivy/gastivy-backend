@@ -4,7 +4,7 @@ import { Categories } from './categories.entity';
 import { DataSource, In, Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
-import { User } from '../user/user.entity';
+import { User } from '../../user/user.entity';
 import { Activity } from '../activity/activity.entity';
 
 @Injectable()
