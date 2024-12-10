@@ -9,6 +9,7 @@ import { CategoriesModule } from './api/activity-app/categories/categories.modul
 import { ActivityModule } from './api/activity-app/activity/activity.module';
 import { CategoriesTransactionsModule } from './api/finance-app/categories/categories.module';
 import typeorm from './config/typeorm';
+import { TransactionsModule } from './api/finance-app/transactions/transactions.module';
 
 @Module({
   imports: [
@@ -21,9 +22,10 @@ import typeorm from './config/typeorm';
     JwtSharedModule,
     UserModule,
     AuthModule,
+    ActivityModule,
     CategoriesModule,
     CategoriesTransactionsModule,
-    ActivityModule,
+    TransactionsModule,
   ],
   controllers: [],
   providers: [],
