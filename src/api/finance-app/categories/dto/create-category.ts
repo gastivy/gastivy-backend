@@ -13,6 +13,7 @@ export class CreateCategoryTransactionsDto {
    *
    * 1 => Income
    * 2 => Expenses
+   * 3 => Transfer
    */
   type: number;
 }

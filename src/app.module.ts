@@ -10,6 +10,7 @@ import { ActivityModule } from './api/activity-app/activity/activity.module';
 import { CategoriesTransactionsModule } from './api/finance-app/categories/categories.module';
 import typeorm from './config/typeorm';
 import { TransactionsModule } from './api/finance-app/transactions/transactions.module';
+import { WalletsModule } from './api/finance-app/wallets/wallets.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TransactionsModule } from './api/finance-app/transactions/transactions.
     CategoriesModule,
     CategoriesTransactionsModule,
     TransactionsModule,
+    WalletsModule,
   ],
   controllers: [],
   providers: [],

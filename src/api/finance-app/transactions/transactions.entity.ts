@@ -4,8 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { CategoriesTransactions } from '../categories/categories.entity';
 
 @Entity('transactions')
 export class Transactions {
@@ -18,24 +20,34 @@ export class Transactions {
   @Column({ type: 'uuid' })
   category_id: string;
 
+  @Column({ type: 'varchar', length: 30 })
+  name: string;
+
+  @Column({ type: 'varchar', length: 2000, nullable: true })
+  description: string;
+
   @Column({ type: 'int' })
   money: number;
 
   @Column({ type: 'timestamptz' })
   date: Date;
 
-  @Column({ type: 'varchar', length: 2000, nullable: true })
-  description: string;
+  @Column({ type: 'uuid' })
+  from_wallet: string;
 
-  @Column({ type: 'varchar', length: 30 })
-  name: string;
-
-  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
-  deleted_at: Date;
+  @Column({ type: 'uuid' })
+  to_wallet: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
+
+  @ManyToOne(
+    () => CategoriesTransactions,
+    (categoryTransaction) => categoryTransaction.transactions,
+  )
+  @JoinColumn({ name: 'category_id' })
+  category: CategoriesTransactions;
 }

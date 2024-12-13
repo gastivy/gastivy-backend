@@ -30,7 +30,10 @@ export class CategoriesTransactionsService {
       throw new NotFoundException('Category Transaction not found');
     }
 
-    return response;
+    const orderType = [3, 1, 2];
+    return response.sort(
+      (a, b) => orderType.indexOf(a.type) - orderType.indexOf(b.type),
+    );
   }
 
   async findByCategoryId(
