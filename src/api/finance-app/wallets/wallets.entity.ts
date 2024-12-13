@@ -5,7 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Transactions } from '../transactions/transactions.entity';
 
 @Entity('wallets')
 export class Wallet {
@@ -29,4 +31,10 @@ export class Wallet {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
+
+  @OneToMany(() => Transactions, (transaction) => transaction.fromWallet)
+  transactionsFrom: Transactions[];
+
+  @OneToMany(() => Transactions, (transaction) => transaction.toWallet)
+  transactionsTo: Transactions[];
 }

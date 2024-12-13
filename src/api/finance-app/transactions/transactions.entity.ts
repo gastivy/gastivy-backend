@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { CategoriesTransactions } from '../categories/categories.entity';
+import { Wallet } from '../wallets/wallets.entity';
 
 @Entity('transactions')
 export class Transactions {
@@ -50,4 +51,12 @@ export class Transactions {
   )
   @JoinColumn({ name: 'category_id' })
   category: CategoriesTransactions;
+
+  @ManyToOne(() => Wallet, (wallet) => wallet.transactionsFrom)
+  @JoinColumn({ name: 'from_wallet' })
+  fromWallet: Wallet;
+
+  @ManyToOne(() => Wallet, (wallet) => wallet.transactionsTo)
+  @JoinColumn({ name: 'to_wallet' })
+  toWallet: Wallet;
 }

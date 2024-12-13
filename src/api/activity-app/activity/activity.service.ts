@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, In, Repository } from 'typeorm';
+import { Between, In, IsNull, Repository } from 'typeorm';
 import { CreateActivityDto } from './dto/create-activity';
 import { Activity } from './activity.entity';
 import { dateTime } from 'src/utils/dateTime';
@@ -59,7 +59,7 @@ export class ActivityService {
     const activities = await this.activityRepository.find({
       where: {
         user_id: userId,
-        deleted_at: null,
+        deleted_at: IsNull(),
         ...(categoryId && { category_id: In(categoryId) }),
         ...(start && end && { start_date: Between(startDate, endDate) }),
       },
@@ -76,7 +76,7 @@ export class ActivityService {
 
   async softDelete(user_id: string, id: string) {
     const response = await this.activityRepository.findOne({
-      where: { user_id, id, deleted_at: null },
+      where: { user_id, id, deleted_at: IsNull() },
     });
 
     if (!response) throw new NotFoundException('Activity not found');
@@ -90,7 +90,7 @@ export class ActivityService {
 
   async update(user_id: string, id: string, body: UpdateActivityDto) {
     const response = await this.activityRepository.findOne({
-      where: { user_id, id, deleted_at: null },
+      where: { user_id, id, deleted_at: IsNull() },
     });
 
     if (!response) throw new NotFoundException('Activity not found');

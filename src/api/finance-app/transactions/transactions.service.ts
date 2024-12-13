@@ -112,6 +112,8 @@ export class TransactionsService {
     const response = await this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoin('transaction.category', 'category')
+      .leftJoin('transaction.fromWallet', 'fromWallet')
+      .leftJoin('transaction.toWallet', 'toWallet')
       .select([
         'transaction.id AS id',
         'transaction.category_id AS category_id',
@@ -120,8 +122,8 @@ export class TransactionsService {
         'transaction.description AS description',
         'transaction.money AS money',
         'transaction.date AS date',
-        'transaction.from_wallet AS from_wallet',
-        'transaction.to_wallet AS to_wallet',
+        'fromWallet.name AS from_wallet_name',
+        'toWallet.name AS to_wallet_name',
         'category.type AS type',
       ])
       .where('transaction.user_id = :userId', { userId })
