@@ -129,8 +129,8 @@ export class TransactionsService {
     return await this.transactionRepository.save(transaction);
   }
 
-  async get(userId: string): Promise<any> {
-    const response = await this.transactionRepository
+  async get(userId: string, limit?: number): Promise<any> {
+    const query = await this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoin('transaction.category', 'category')
       .leftJoin('transaction.fromWallet', 'fromWallet')
@@ -148,8 +148,13 @@ export class TransactionsService {
         'category.type AS type',
       ])
       .where('transaction.user_id = :userId', { userId })
-      .orderBy('transaction.date', 'DESC')
-      .getRawMany();
+      .orderBy('transaction.date', 'DESC');
+
+    if (limit) {
+      query.limit(limit);
+    }
+
+    const response = await query.getRawMany();
 
     if (!response) {
       throw new NotFoundException('Transaction not found');

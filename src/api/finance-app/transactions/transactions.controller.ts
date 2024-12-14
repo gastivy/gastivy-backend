@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
 import { getUserId } from 'src/utils/getUserId';
 import { CreateTransactionDto } from './dto/create-transaction';
 import { TransactionsService } from './transactions.service';
@@ -8,9 +8,12 @@ export class TransactionsController {
   constructor(private readonly service: TransactionsService) {}
 
   @Get()
-  async getTransaction(@Req() request: Request): Promise<void> {
+  async getTransaction(
+    @Req() request: Request,
+    @Query('limit') limit?: number,
+  ): Promise<void> {
     const userId = getUserId(request);
-    return this.service.get(userId);
+    return this.service.get(userId, limit);
   }
 
   @Post()
