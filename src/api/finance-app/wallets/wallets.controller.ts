@@ -13,6 +13,12 @@ export class WalletsController {
     return this.service.getAll(userId);
   }
 
+  @Get('/balance')
+  async getBalance(@Req() request: Request) {
+    const userId = getUserId(request);
+    return this.service.getBalance(userId);
+  }
+
   @Post()
   async createWallet(
     @Body() body: CreateWalletDto,

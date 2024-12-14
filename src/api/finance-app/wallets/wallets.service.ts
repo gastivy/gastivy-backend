@@ -17,6 +17,13 @@ export class WalletsService {
     return await this.walletRepository.findBy({ user_id });
   }
 
+  async getBalance(user_id: string) {
+    const wallets = await this.walletRepository.findBy({ user_id });
+    return {
+      balance: wallets.reduce((sum, wallet) => sum + wallet.balance, 0),
+    };
+  }
+
   async create(body: CreateWalletDto, user_id: string) {
     const category = this.walletRepository.create({
       ...body,
