@@ -7,6 +7,7 @@ import {
   TransactionData,
 } from './dto/create-transaction';
 import { Wallet } from '../wallets/wallets.entity';
+import { CategoriesTransactions } from '../categories/categories.entity';
 
 @Injectable()
 export class TransactionsService {
@@ -17,24 +18,44 @@ export class TransactionsService {
     private readonly transactionRepository: Repository<Transactions>,
     @InjectRepository(Wallet)
     private readonly walletRepository: Repository<Wallet>,
+    @InjectRepository(CategoriesTransactions)
+    private readonly categoryTransactionsRepository: Repository<CategoriesTransactions>,
   ) {}
 
   async create(
     body: CreateTransactionDto,
     userId: string,
   ): Promise<Transactions[]> {
-    const transactions = body.transactions.map((item) => {
-      const transaction = new Transactions();
-      transaction.user_id = userId;
-      transaction.category_id = item.category_id;
-      transaction.name = item.name;
-      transaction.description = item.description;
-      transaction.money = item.money;
-      transaction.date = item.date;
-      transaction.from_wallet = item.from_wallet;
-      transaction.to_wallet = item.to_wallet;
-      return transaction;
-    });
+    const categoryTransaction =
+      await this.categoryTransactionsRepository.findOne({
+        where: { user_id: userId, type: 4 },
+      });
+
+    const transactions = body.transactions
+      .flatMap((item) => {
+        if (Boolean(item.fee)) {
+          const feeObject = {
+            ...item,
+            category_id: categoryTransaction.id,
+            money: item.fee,
+            to_wallet: null,
+          };
+          return [item, feeObject];
+        }
+        return item;
+      })
+      .map((item) => {
+        const transaction = new Transactions();
+        transaction.user_id = userId;
+        transaction.category_id = item.category_id;
+        transaction.name = item.name;
+        transaction.description = item.description;
+        transaction.money = item.money;
+        transaction.date = item.date;
+        transaction.from_wallet = item.from_wallet;
+        transaction.to_wallet = item.to_wallet;
+        return transaction;
+      });
 
     const wallets = await this.walletRepository.findBy({ user_id: userId });
 
@@ -127,6 +148,7 @@ export class TransactionsService {
         'category.type AS type',
       ])
       .where('transaction.user_id = :userId', { userId })
+      .orderBy('transaction.date', 'DESC')
       .getRawMany();
 
     if (!response) {

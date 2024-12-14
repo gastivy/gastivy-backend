@@ -6,10 +6,16 @@ import { Transactions } from './transactions.entity';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
 import { Wallet } from '../wallets/wallets.entity';
+import { CategoriesTransactions } from '../categories/categories.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Transactions, User, Wallet]),
+    TypeOrmModule.forFeature([
+      Transactions,
+      User,
+      Wallet,
+      CategoriesTransactions,
+    ]),
     JwtSharedModule,
   ],
   controllers: [TransactionsController],
