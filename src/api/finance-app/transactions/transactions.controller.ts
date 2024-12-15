@@ -11,6 +11,7 @@ import {
 import { getUserId } from 'src/utils/getUserId';
 import { CreateTransactionDto } from './dto/create-transaction';
 import { TransactionsService } from './transactions.service';
+import { Transactions } from './transactions.entity';
 
 @Controller('/finance-app/transactions')
 export class TransactionsController {
@@ -20,9 +21,18 @@ export class TransactionsController {
   async getTransaction(
     @Req() request: Request,
     @Query('limit') limit?: number,
-  ): Promise<void> {
+  ) {
     const userId = getUserId(request);
     return this.service.get(userId, limit);
+  }
+
+  @Get(':transactionId')
+  async getDetailTransaction(
+    @Req() request: Request,
+    @Param('transactionId') transactionId: string,
+  ): Promise<Transactions> {
+    const userId = getUserId(request);
+    return this.service.getDetail(userId, transactionId);
   }
 
   @Post()

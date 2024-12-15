@@ -23,7 +23,9 @@ export class CategoriesTransactionsService {
         'category.name AS name',
         'category.type AS type',
       ])
-      .where('category.user_id = :userId', { userId })
+      .where('category.user_id = :userId OR category.user_id IS NULL', {
+        userId,
+      })
       .getRawMany();
 
     if (!response) {

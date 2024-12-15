@@ -2,10 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { Transactions } from './transactions.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  CreateTransactionDto,
-  TransactionData,
-} from './dto/create-transaction';
+import { CreateTransactionDto } from './dto/create-transaction';
 import { Wallet } from '../wallets/wallets.entity';
 import { CategoriesTransactions } from '../categories/categories.entity';
 
@@ -26,10 +23,17 @@ export class TransactionsService {
     body: CreateTransactionDto,
     userId: string,
   ): Promise<Transactions[]> {
+    const hasFee = body.transactions.find((item) => item.fee).fee;
+
     const categoryTransaction =
-      await this.categoryTransactionsRepository.findOne({
-        where: { user_id: userId, type: 4 },
-      });
+      hasFee > 0 &&
+      (await this.categoryTransactionsRepository
+        .createQueryBuilder('category')
+        .where('category.user_id = :userId OR category.user_id IS NULL', {
+          userId,
+        })
+        .andWhere('category.type = :type', { type: 4 })
+        .getOne());
 
     const transactions = body.transactions
       .flatMap((item) => {
@@ -59,7 +63,7 @@ export class TransactionsService {
 
     const wallets = await this.walletRepository.findBy({ user_id: userId });
 
-    const groupTransactions = (transactions: TransactionData[]) => {
+    const groupTransactions = (transactions: Transactions[]) => {
       const grouped = {
         from_wallet: {} as Record<string, number>,
         to_wallet: {} as Record<string, number>,
@@ -93,7 +97,7 @@ export class TransactionsService {
        *
        */
     };
-    const groupingTransactions = groupTransactions(body.transactions);
+    const groupingTransactions = groupTransactions(transactions);
 
     const updateWalletBalances = (
       wallets: { id: string; balance: number }[],
@@ -129,7 +133,7 @@ export class TransactionsService {
     return await this.transactionRepository.save(transaction);
   }
 
-  async get(userId: string, limit?: number): Promise<any> {
+  async get(userId: string, limit?: number) {
     const query = await this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoin('transaction.category', 'category')
@@ -155,6 +159,22 @@ export class TransactionsService {
     }
 
     const response = await query.getRawMany();
+
+    if (!response) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    return response;
+  }
+
+  async getDetail(
+    userId: string,
+    transactionId: string,
+  ): Promise<Transactions> {
+    const response = await this.transactionRepository.findOneBy({
+      user_id: userId,
+      id: transactionId,
+    });
 
     if (!response) {
       throw new NotFoundException('Transaction not found');
