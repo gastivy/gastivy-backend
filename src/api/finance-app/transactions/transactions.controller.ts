@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { getUserId } from 'src/utils/getUserId';
 import { CreateTransactionDto } from './dto/create-transaction';
 import { TransactionsService } from './transactions.service';
@@ -23,5 +32,14 @@ export class TransactionsController {
   ): Promise<void> {
     const userId = getUserId(request);
     this.service.create(body, userId);
+  }
+
+  @Delete(':transactionId')
+  async deleteTransaction(
+    @Req() request: Request,
+    @Param('transactionId') transactionId: string,
+  ) {
+    const userId = getUserId(request);
+    return this.service.delete(transactionId, userId);
   }
 }

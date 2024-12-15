@@ -162,4 +162,43 @@ export class TransactionsService {
 
     return response;
   }
+
+  async delete(transactionId: string, user_id: string): Promise<void> {
+    const categoryTransaction = await this.transactionRepository.findOneBy({
+      id: transactionId,
+      user_id,
+    });
+
+    if (!categoryTransaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    const wallets = await this.walletRepository.findBy({ user_id });
+
+    // Reduce balances for "from_wallet"
+    const fromWallet = wallets.find(
+      (w) => w.id === categoryTransaction.from_wallet,
+    );
+    if (fromWallet) {
+      fromWallet.balance += categoryTransaction.money || 0;
+    }
+
+    // Increase balances for "to_wallet"
+    const toWallet = wallets.find(
+      (w) => w.id === categoryTransaction.to_wallet,
+    );
+    if (toWallet) {
+      toWallet.balance -= categoryTransaction.money || 0;
+    }
+
+    // Update Balance Wallet
+    if (wallets.length > 0) {
+      await this.walletRepository.save(wallets);
+    }
+
+    await this.transactionRepository.delete({
+      id: transactionId,
+      user_id,
+    });
+  }
 }
