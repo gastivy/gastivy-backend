@@ -1,6 +1,4 @@
-import { Type } from 'class-transformer';
 import {
-  IsArray,
   IsDateString,
   IsNotEmpty,
   IsNumber,
@@ -8,19 +6,11 @@ import {
   IsUUID,
   MaxLength,
   MinLength,
-  ValidateNested,
 } from 'class-validator';
 
-export class CreateTransactionDto {
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => TransactionData)
-  transactions: TransactionData[];
-}
-
-export class TransactionData {
+export class UpdateTransactionDto {
   @IsUUID()
-  @IsOptional()
+  @IsNotEmpty()
   id: string;
 
   @IsUUID()

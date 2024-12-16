@@ -5,6 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTransactionDto } from './dto/create-transaction';
 import { Wallet } from '../wallets/wallets.entity';
 import { CategoriesTransactions } from '../categories/categories.entity';
+import { UpdateTransactionDto } from './dto/update-transaction';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class TransactionsService {
@@ -23,37 +25,46 @@ export class TransactionsService {
     body: CreateTransactionDto,
     userId: string,
   ): Promise<Transactions[]> {
-    const hasFee = body.transactions.find((item) => item.fee).fee;
+    const hasFee = body.transactions.find((item) => item.fee)?.fee || 0;
 
     const categoryTransaction =
       hasFee > 0 &&
       (await this.categoryTransactionsRepository
         .createQueryBuilder('category')
-        .where('category.user_id = :userId OR category.user_id IS NULL', {
+        .where('category.type = :type', { type: 4 })
+        .andWhere('category.user_id = :userId OR category.user_id IS NULL', {
           userId,
         })
-        .andWhere('category.type = :type', { type: 4 })
         .getOne());
 
     const transactions = body.transactions
       .flatMap((item) => {
         if (Boolean(item.fee)) {
+          const id = uuidv4();
+          const mainTransaction = {
+            ...item,
+            id,
+          };
+
           const feeObject = {
             ...item,
             category_id: categoryTransaction.id,
+            parent_transaction_id: mainTransaction.id,
             money: item.fee,
             to_wallet: null,
           };
-          return [item, feeObject];
+          return [mainTransaction, feeObject];
         }
         return item;
       })
       .map((item) => {
         const transaction = new Transactions();
+        transaction.id = item.id;
         transaction.user_id = userId;
         transaction.category_id = item.category_id;
         transaction.name = item.name;
         transaction.description = item.description;
+        transaction.parent_transaction_id = item.parent_transaction_id;
         transaction.money = item.money;
         transaction.date = item.date;
         transaction.from_wallet = item.from_wallet;
@@ -152,7 +163,12 @@ export class TransactionsService {
         'category.type AS type',
       ])
       .where('transaction.user_id = :userId', { userId })
-      .orderBy('transaction.date', 'DESC');
+      .orderBy('transaction.date', 'DESC')
+      .addOrderBy(
+        'CASE WHEN transaction.parent_transaction_id IS NULL THEN 0 ELSE 1 END',
+        'ASC',
+      )
+      .addOrderBy('transaction.id', 'ASC');
 
     if (limit) {
       query.limit(limit);
@@ -176,11 +192,20 @@ export class TransactionsService {
       id: transactionId,
     });
 
+    // For Get Fee if exists
+    const subTransaction = await this.transactionRepository.findOneBy({
+      user_id: userId,
+      parent_transaction_id: transactionId,
+    });
+
     if (!response) {
       throw new NotFoundException('Transaction not found');
     }
 
-    return response;
+    return {
+      ...response,
+      ...(subTransaction?.money && { fee: subTransaction.money }),
+    };
   }
 
   async delete(transactionId: string, user_id: string): Promise<void> {
@@ -220,5 +245,145 @@ export class TransactionsService {
       id: transactionId,
       user_id,
     });
+  }
+
+  async update(body: UpdateTransactionDto, user_id: string): Promise<void> {
+    const transaction = await this.transactionRepository.findOneBy({
+      user_id,
+      id: body.id,
+    });
+
+    const categoryTransaction = await this.categoryTransactionsRepository
+      .createQueryBuilder('category')
+      .where('category.type = :type', { type: 4 })
+      .andWhere('category.user_id = :userId OR category.user_id IS NULL', {
+        userId: user_id,
+      })
+      .getOne();
+
+    // Get Wallet
+    const allWallet = await this.walletRepository.findBy({ user_id });
+
+    // For Get Fee if exists
+    const subTransaction = await this.transactionRepository.findOneBy({
+      user_id,
+      parent_transaction_id: body.id,
+    });
+
+    const updateWalletBalances = (wallets: Wallet[]) => {
+      // Balikin Transaksi Sebelumnya
+      // Kalau from_wallet = Di tambahkan
+      if (transaction.from_wallet) {
+        const wallet = wallets.find((w) => w.id === transaction.from_wallet);
+        if (wallet) wallet.balance += transaction.money;
+      }
+
+      // Kalau to_wallet = Di Kurangi
+      if (transaction.to_wallet) {
+        const wallet = wallets.find((w) => w.id === transaction.to_wallet);
+        if (wallet) wallet.balance -= transaction.money;
+      }
+
+      // Kalau ada Fee Transaksi Sebelumnya
+      if (subTransaction?.money && subTransaction?.from_wallet) {
+        const wallet = wallets.find((w) => w.id === subTransaction.from_wallet);
+        if (wallet) wallet.balance += subTransaction.money;
+      }
+
+      // Update Transaksi Baru
+      // Kalau from_wallet = Dikurangi
+      if (body.from_wallet) {
+        const wallet = wallets.find((w) => w.id === body.from_wallet);
+        if (wallet) wallet.balance -= body.money;
+      }
+
+      // Kalau to_wallet = Ditambahi
+      if (body.to_wallet) {
+        const wallet = wallets.find((w) => w.id === body.to_wallet);
+        if (wallet) wallet.balance += body.money;
+      }
+
+      // Kalau Ada Fee
+      if (body.fee > 0 && body.from_wallet) {
+        const wallet = wallets.find((w) => w.id === body.from_wallet);
+        if (wallet) wallet.balance -= body.fee;
+      }
+
+      return wallets;
+    };
+
+    const updatedWallets = updateWalletBalances(allWallet);
+    // Update Balance Wallet
+    await this.walletRepository.save(updatedWallets);
+
+    console.log('body: ', body);
+
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    // Jika Punya Fee sebelumnya
+    if (subTransaction?.money && body.fee) {
+      const feeObject = {
+        ...body,
+        id: subTransaction.id,
+        category_id: categoryTransaction.id,
+        parent_transaction_id: body.id,
+        money: body.fee,
+        date: body.date,
+        to_wallet: null,
+      };
+
+      await this.transactionRepository.save([body, feeObject]);
+    }
+
+    // Jika Tidak Punya Fee sebelumnya
+    if (!subTransaction?.money && body.fee) {
+      const id = uuidv4();
+      const feeObject = {
+        ...body,
+        id,
+        user_id,
+        category_id: categoryTransaction.id,
+        description: null,
+        parent_transaction_id: body.id,
+        money: body.fee,
+        to_wallet: null,
+      };
+
+      const transactions = [body, feeObject].map((item) => {
+        const transaction = new Transactions();
+        transaction.id = item.id;
+        transaction.user_id = user_id;
+        transaction.category_id = item.category_id;
+        transaction.name = item.name;
+        transaction.description = item.description;
+        transaction.parent_transaction_id = item.parent_transaction_id;
+        transaction.money = item.money;
+        transaction.date = item.date;
+        transaction.from_wallet = item.from_wallet;
+        transaction.to_wallet = item.to_wallet;
+        return transaction;
+      });
+
+      const feeTransaction = this.transactionRepository.create(transactions);
+      await this.transactionRepository.save(feeTransaction);
+    }
+
+    if (subTransaction?.money && !body.fee) {
+      // Hapus SubTransaction
+      await this.transactionRepository.delete({
+        id: subTransaction.id,
+        user_id,
+      });
+      await this.transactionRepository.save(body);
+    }
+
+    if (!subTransaction?.money && !body.fee) {
+      await this.transactionRepository.save({
+        ...body,
+        parent_transaction_id: null,
+      });
+    }
   }
 }

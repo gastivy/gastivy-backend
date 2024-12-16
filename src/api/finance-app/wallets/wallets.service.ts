@@ -14,7 +14,14 @@ export class WalletsService {
   ) {}
 
   async getAll(user_id: string) {
-    return await this.walletRepository.findBy({ user_id });
+    return await this.walletRepository.find({
+      where: {
+        user_id,
+      },
+      order: {
+        name: 'ASC',
+      },
+    });
   }
 
   async getBalance(user_id: string) {

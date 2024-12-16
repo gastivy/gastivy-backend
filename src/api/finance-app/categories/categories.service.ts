@@ -26,13 +26,14 @@ export class CategoriesTransactionsService {
       .where('category.user_id = :userId OR category.user_id IS NULL', {
         userId,
       })
+      .orderBy('name', 'ASC')
       .getRawMany();
 
     if (!response) {
       throw new NotFoundException('Category Transaction not found');
     }
 
-    const orderType = [3, 1, 2];
+    const orderType = [3, 1, 2, 4, 5, 6];
     return response.sort(
       (a, b) => orderType.indexOf(a.type) - orderType.indexOf(b.type),
     );

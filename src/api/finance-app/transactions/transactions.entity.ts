@@ -21,6 +21,9 @@ export class Transactions {
   @Column({ type: 'uuid' })
   category_id: string;
 
+  @Column({ type: 'uuid' })
+  parent_transaction_id: string;
+
   @Column({ type: 'varchar', length: 30 })
   name: string;
 
@@ -29,6 +32,8 @@ export class Transactions {
 
   @Column({ type: 'int' })
   money: number;
+
+  fee?: number;
 
   @Column({ type: 'timestamptz' })
   date: Date;

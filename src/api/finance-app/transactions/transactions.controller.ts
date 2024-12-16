@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -12,6 +13,7 @@ import { getUserId } from 'src/utils/getUserId';
 import { CreateTransactionDto } from './dto/create-transaction';
 import { TransactionsService } from './transactions.service';
 import { Transactions } from './transactions.entity';
+import { UpdateTransactionDto } from './dto/update-transaction';
 
 @Controller('/finance-app/transactions')
 export class TransactionsController {
@@ -51,5 +53,14 @@ export class TransactionsController {
   ) {
     const userId = getUserId(request);
     return this.service.delete(transactionId, userId);
+  }
+
+  @Patch()
+  async updateTransaction(
+    @Body() body: UpdateTransactionDto,
+    @Req() request: Request,
+  ): Promise<void> {
+    const userId = getUserId(request);
+    return this.service.update(body, userId);
   }
 }
