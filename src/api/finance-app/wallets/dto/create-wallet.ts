@@ -9,4 +9,16 @@ export class CreateWalletDto {
   @IsNotEmpty({ message: 'Balance is required' })
   @IsNumber()
   balance: number;
+
+  @IsNotEmpty({ message: 'Type is required' })
+  @IsNumber()
+  /**
+   * Type: 1 | 2 | 3 | 4
+   *
+   * 1 => CASH
+   * 2 => ATM
+   * 3 => E-Money
+   * 4 => Assets
+   */
+  type: number;
 }

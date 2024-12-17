@@ -23,6 +23,9 @@ export class Wallet {
   @Column({ type: 'int', default: 0 })
   balance: number;
 
+  @Column({ type: 'int' })
+  type: number;
+
   @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   deleted_at?: Date;
 

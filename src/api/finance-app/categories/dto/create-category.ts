@@ -9,12 +9,14 @@ export class CreateCategoryTransactionsDto {
   @IsNotEmpty({ message: 'Type is required' })
   @IsNumber()
   /**
-   * Type: 1 | 2 | 3 | 4
+   * Type: 1 | 2 | 3 | 4 | 5 | 6
    *
    * 1 => Income
    * 2 => Expenses
    * 3 => Transfer
    * 4 => Fee Transfer
+   * 5 => Profit
+   * 6 => Loss
    */
   type: number;
 }
