@@ -245,6 +245,38 @@ export class TransactionsService {
       id: transactionId,
       user_id,
     });
+
+    const subTransaction = await this.transactionRepository.findOneBy({
+      user_id,
+      parent_transaction_id: transactionId,
+    });
+
+    // Handle Sub Transaction
+    if (subTransaction?.id) {
+      // Reduce balances for "from_wallet"
+      const fromWallet = wallets.find(
+        (w) => w.id === subTransaction.from_wallet,
+      );
+      if (fromWallet) {
+        fromWallet.balance += subTransaction.money || 0;
+      }
+
+      // Increase balances for "to_wallet"
+      const toWallet = wallets.find((w) => w.id === subTransaction.to_wallet);
+      if (toWallet) {
+        toWallet.balance -= subTransaction.money || 0;
+      }
+
+      // Update Balance Wallet
+      if (wallets.length > 0) {
+        await this.walletRepository.save(wallets);
+      }
+
+      await this.transactionRepository.delete({
+        id: subTransaction.id,
+        user_id,
+      });
+    }
   }
 
   async update(body: UpdateTransactionDto, user_id: string): Promise<void> {
@@ -315,8 +347,6 @@ export class TransactionsService {
     const updatedWallets = updateWalletBalances(allWallet);
     // Update Balance Wallet
     await this.walletRepository.save(updatedWallets);
-
-    console.log('body: ', body);
 
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
