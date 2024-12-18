@@ -38,4 +38,10 @@ export class WalletsService {
     });
     await this.walletRepository.save(category);
   }
+
+  async getDetail(user_id: string, wallet_id: string) {
+    return await this.walletRepository.findOne({
+      where: { user_id, id: wallet_id },
+    });
+  }
 }

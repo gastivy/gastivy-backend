@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { getUserId } from 'src/utils/getUserId';
 import { CreateWalletDto } from './dto/create-wallet';
 import { WalletsService } from './wallets.service';
@@ -17,6 +17,15 @@ export class WalletsController {
   async getBalance(@Req() request: Request) {
     const userId = getUserId(request);
     return this.service.getBalance(userId);
+  }
+
+  @Get(':walletId')
+  async getDetailWallet(
+    @Req() request: Request,
+    @Param('walletId') walletId: string,
+  ) {
+    const userId = getUserId(request);
+    return this.service.getDetail(userId, walletId);
   }
 
   @Post()
