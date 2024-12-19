@@ -21,10 +21,7 @@ export class TransactionsService {
     private readonly categoryTransactionsRepository: Repository<CategoriesTransactions>,
   ) {}
 
-  async create(
-    body: CreateTransactionDto,
-    userId: string,
-  ): Promise<Transactions[]> {
+  async create(body: CreateTransactionDto, userId: string): Promise<void> {
     const hasFee = body.transactions.find((item) => item.fee)?.fee || 0;
 
     const categoryTransaction =
@@ -137,12 +134,17 @@ export class TransactionsService {
 
     const updatedWallets = updateWalletBalances(wallets, groupingTransactions);
 
-    const transaction = this.transactionRepository.create(transactions);
-    if (transaction) {
-      // Update Balance Wallet
-      await this.walletRepository.save(updatedWallets);
-      return await this.transactionRepository.save(transaction);
-    }
+    // Use the dataSource to manage the transaction
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const transaction = transactionalEntityManager.create(
+        Transactions,
+        transactions,
+      );
+      await transactionalEntityManager.save(transaction);
+
+      // Update wallet balances in the same transaction
+      await transactionalEntityManager.save(updatedWallets);
+    });
   }
 
   async get(userId: string, limit?: number) {
