@@ -5,6 +5,7 @@ import {
   ArgumentsHost,
   NotFoundException,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Response } from 'express';
 
@@ -46,6 +47,21 @@ export class UnauthorizedExceptionFilter implements ExceptionFilter {
       code: status,
       message: exception.message,
       error: 'Unauthorized',
+    });
+  }
+}
+
+@Catch(ForbiddenException)
+export class ForbiddenExceptionFilter implements ExceptionFilter {
+  catch(exception: ForbiddenException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const status = exception.getStatus();
+
+    response.status(status).json({
+      code: status,
+      message: exception.message,
+      error: 'Forbidden Access',
     });
   }
 }
