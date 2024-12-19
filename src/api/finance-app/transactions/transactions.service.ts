@@ -137,11 +137,12 @@ export class TransactionsService {
 
     const updatedWallets = updateWalletBalances(wallets, groupingTransactions);
 
-    // Update Balance Wallet
-    await this.walletRepository.save(updatedWallets);
-
     const transaction = this.transactionRepository.create(transactions);
-    return await this.transactionRepository.save(transaction);
+    if (transaction) {
+      // Update Balance Wallet
+      await this.walletRepository.save(updatedWallets);
+      return await this.transactionRepository.save(transaction);
+    }
   }
 
   async get(userId: string, limit?: number) {
