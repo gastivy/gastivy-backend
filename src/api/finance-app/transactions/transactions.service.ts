@@ -7,6 +7,7 @@ import { Wallet } from '../wallets/wallets.entity';
 import { CategoriesTransactions } from '../categories/categories.entity';
 import { UpdateTransactionDto } from './dto/update-transaction';
 import { v4 as uuidv4 } from 'uuid';
+import { TransactionsType } from 'src/constants/transactions';
 
 @Injectable()
 export class TransactionsService {
@@ -24,15 +25,13 @@ export class TransactionsService {
   async create(body: CreateTransactionDto, userId: string): Promise<void> {
     const hasFee = body.transactions.find((item) => item.fee)?.fee || 0;
 
-    const categoryTransaction =
-      hasFee > 0 &&
-      (await this.categoryTransactionsRepository
+    let categoryTransaction = undefined;
+    if (hasFee > 0) {
+      categoryTransaction = await this.categoryTransactionsRepository
         .createQueryBuilder('category')
-        .where('category.type = :type', { type: 4 })
-        .andWhere('category.user_id = :userId OR category.user_id IS NULL', {
-          userId,
-        })
-        .getOne());
+        .where('category.type = :type', { type: TransactionsType.FEE_TRANSFER })
+        .getOne();
+    }
 
     const transactions = body.transactions
       .flatMap((item) => {
@@ -290,10 +289,7 @@ export class TransactionsService {
 
     const categoryTransaction = await this.categoryTransactionsRepository
       .createQueryBuilder('category')
-      .where('category.type = :type', { type: 4 })
-      .andWhere('category.user_id = :userId OR category.user_id IS NULL', {
-        userId: user_id,
-      })
+      .where('category.type = :type', { type: TransactionsType.FEE_TRANSFER })
       .getOne();
 
     // Get Wallet

@@ -3,6 +3,7 @@ import { getUserId } from 'src/utils/getUserId';
 import { CreateWalletDto } from './dto/create-wallet';
 import { WalletsService } from './wallets.service';
 import { UpdateWalletDto } from './dto/update-wallet';
+import { Wallet } from './wallets.entity';
 
 @Controller('/finance-app/wallet')
 export class WalletsController {
@@ -36,14 +37,15 @@ export class WalletsController {
   ): Promise<void> {
     const userId = getUserId(request);
     this.service.create(body, userId);
+    return;
   }
 
   @Patch()
   async updateWallet(
     @Body() body: UpdateWalletDto,
     @Req() request: Request,
-  ): Promise<void> {
+  ): Promise<Wallet> {
     const userId = getUserId(request);
-    this.service.update(body, userId);
+    return this.service.update(body, userId);
   }
 }

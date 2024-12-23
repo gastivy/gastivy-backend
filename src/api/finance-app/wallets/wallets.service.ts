@@ -109,6 +109,6 @@ export class WalletsService {
       }
     }
 
-    return await this.walletRepository.save({ ...wallet, body });
+    return await this.walletRepository.save({ ...wallet, ...body });
   }
 }
