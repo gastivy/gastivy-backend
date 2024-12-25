@@ -23,9 +23,11 @@ export class TransactionsController {
   async getTransaction(
     @Req() request: Request,
     @Query('limit') limit?: number,
+    @Query('start_date') start_date?: Date,
+    @Query('end_date') end_date?: Date,
   ) {
     const userId = getUserId(request);
-    return this.service.get(userId, limit);
+    return this.service.get(userId, limit, start_date, end_date);
   }
 
   @Get(':transactionId')

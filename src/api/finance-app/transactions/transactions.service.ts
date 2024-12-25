@@ -146,7 +146,13 @@ export class TransactionsService {
     });
   }
 
-  async get(userId: string, limit?: number) {
+  async get(userId: string, limit?: number, start?: Date, end?: Date) {
+    const startDate = start && new Date(start);
+    const endDate = end && new Date(end);
+    if (start && end) {
+      endDate.setHours(23, 59, 59, 999);
+    }
+
     const query = await this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoin('transaction.category', 'category')
@@ -174,6 +180,13 @@ export class TransactionsService {
 
     if (limit) {
       query.limit(limit);
+    }
+
+    if (startDate && endDate) {
+      query.andWhere('transaction.date BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
+      });
     }
 
     const response = await query.getRawMany();
