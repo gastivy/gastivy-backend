@@ -11,6 +11,7 @@ import { CategoriesTransactionsModule } from './api/finance-app/categories/categ
 import typeorm from './config/typeorm';
 import { TransactionsModule } from './api/finance-app/transactions/transactions.module';
 import { WalletsModule } from './api/finance-app/wallets/wallets.module';
+import { StatisticsFinanceModule } from './api/finance-app/statistics/statistics.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { WalletsModule } from './api/finance-app/wallets/wallets.module';
     ActivityModule,
     CategoriesModule,
     CategoriesTransactionsModule,
+    StatisticsFinanceModule,
     TransactionsModule,
     WalletsModule,
   ],
