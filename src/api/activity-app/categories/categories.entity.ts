@@ -25,6 +25,9 @@ export class Categories {
   seconds?: number;
   minutes?: number;
 
+  @Column({ type: 'timestamptz' })
+  deleted_at: Date;
+
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 

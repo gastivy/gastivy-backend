@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Categories } from './categories.entity';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
 import { User } from '../../user/user.entity';
@@ -58,6 +58,7 @@ export class CategoriesService {
               ELSE 0 END), 0) AS seconds`,
       ])
       .where('category.user_id = :userId', { userId })
+      .andWhere('category.deleted_at IS NULL')
       .groupBy('category.id')
       .addGroupBy('category.name')
       .addGroupBy('category.target');
@@ -100,6 +101,7 @@ export class CategoriesService {
       .select('category.id', 'id')
       .addSelect('category.name', 'name')
       .where('category.user_id = :userId', { userId })
+      .andWhere('category.deleted_at IS NULL')
       .getRawMany();
 
     if (!response) {
@@ -138,9 +140,12 @@ export class CategoriesService {
   }
 
   async delete(categoryIds: string[], user_id: string): Promise<void> {
-    const categories = await this.categoryRepository.findBy({
-      id: In(categoryIds),
-      user_id,
+    const categories = await this.categoryRepository.find({
+      where: {
+        id: In(categoryIds),
+        deleted_at: IsNull(),
+        user_id,
+      },
     });
 
     if (categories.length !== categoryIds.length) {
@@ -154,6 +159,27 @@ export class CategoriesService {
       );
     }
 
-    await this.categoryRepository.delete({ id: In(categoryIds), user_id });
+    const activities = await this.activityRepository.find({
+      where: {
+        user_id,
+        deleted_at: IsNull(),
+        ...(categoryIds && { category_id: In(categoryIds) }),
+      },
+    });
+
+    const updatedCategories = categories.map((category) => ({
+      ...category,
+      deleted_at: new Date(),
+    }));
+
+    const updatedActivities = activities.map((category) => ({
+      ...category,
+      deleted_at: new Date(),
+    }));
+
+    if (updatedActivities.length) {
+      await this.activityRepository.save(updatedActivities);
+    }
+    await this.categoryRepository.save(updatedCategories);
   }
 }
