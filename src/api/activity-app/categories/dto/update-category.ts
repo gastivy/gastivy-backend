@@ -1,4 +1,5 @@
 import {
+  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsString,
@@ -18,4 +19,9 @@ export class UpdateCategoryDto {
 
   @IsString({ message: 'Category id must be a string' })
   id: string;
+
+  @IsNotEmpty({ message: 'Start Date is required' })
+  @IsDateString()
+  @IsNotEmpty()
+  start_date: Date;
 }

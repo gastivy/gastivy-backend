@@ -22,6 +22,9 @@ export class Categories {
   @Column({ type: 'integer' })
   target: number;
 
+  @Column({ type: 'timestamptz' })
+  start_date: Date;
+
   seconds?: number;
   minutes?: number;
 

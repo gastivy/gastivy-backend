@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsNumber, MaxLength, MinLength } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class CreateCategoryDto {
   @IsNotEmpty({ message: 'Category name is required' })
@@ -9,4 +15,9 @@ export class CreateCategoryDto {
   @IsNotEmpty({ message: 'Target is required' })
   @IsNumber()
   target: number;
+
+  @IsNotEmpty({ message: 'Start Date is required' })
+  @IsDateString()
+  @IsNotEmpty()
+  start_date: Date;
 }

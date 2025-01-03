@@ -46,13 +46,16 @@ export class CategoriesService {
         'category.id AS id',
         'category.name AS name',
         'category.target AS target',
+        'category.start_date AS start_date',
         `COALESCE(SUM(
           CASE
             WHEN activity.deleted_at IS NULL
+            AND
+              activity.start_date IS NULL 
             ${
               startDate && endDate
-                ? `AND (activity.start_date IS NULL OR (activity.start_date BETWEEN :start AND :end))`
-                : ''
+                ? `OR (activity.start_date BETWEEN :start AND :end)`
+                : 'OR (activity.start_date BETWEEN category.start_date AND :today)'
             }
             THEN activity.seconds
               ELSE 0 END), 0) AS seconds`,
@@ -63,6 +66,8 @@ export class CategoriesService {
       .addGroupBy('category.name')
       .addGroupBy('category.target');
 
+    queryCategory.setParameters({ today: new Date() });
+
     if (startDate !== undefined && endDate !== undefined) {
       queryCategory.setParameters({
         start: startDate,
@@ -72,11 +77,31 @@ export class CategoriesService {
 
     const category = await queryCategory.getRawMany();
 
-    return category.map((item) => ({
-      ...item,
-      seconds: Number(item.seconds),
-      minutes: Math.floor(item.seconds / 60),
-    }));
+    if (startDate !== undefined && endDate !== undefined) {
+      const totalDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000),
+      );
+
+      return category.map((item) => ({
+        ...item,
+        seconds: Number(item.seconds),
+        minutes: Math.floor(item.seconds / 60),
+        target: item.target * totalDays,
+      }));
+    } else {
+      return category.map((item) => {
+        const totalDays = Math.ceil(
+          (new Date().getTime() - item.start_date.getTime()) /
+            (24 * 60 * 60 * 1000),
+        );
+        return {
+          ...item,
+          seconds: Number(item.seconds),
+          minutes: Math.floor(item.seconds / 60),
+          target: item.target * totalDays,
+        };
+      });
+    }
   }
 
   async findByCategoryId(
