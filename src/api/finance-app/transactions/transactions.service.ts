@@ -305,6 +305,10 @@ export class TransactionsService {
       id: body.id,
     });
 
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
     const categoryTransaction = await this.categoryTransactionsRepository
       .createQueryBuilder('category')
       .where('category.type = :type', { type: TransactionsType.FEE_TRANSFER })
