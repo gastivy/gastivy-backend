@@ -135,14 +135,19 @@ export class TransactionsService {
 
     // Use the dataSource to manage the transaction
     await this.dataSource.transaction(async (transactionalEntityManager) => {
-      const transaction = transactionalEntityManager.create(
-        Transactions,
-        transactions,
-      );
-      await transactionalEntityManager.save(transaction);
+      try {
+        const transaction = transactionalEntityManager.create(
+          Transactions,
+          transactions,
+        );
+        await transactionalEntityManager.save(transaction);
 
-      // Update wallet balances in the same transaction
-      await transactionalEntityManager.save(updatedWallets);
+        // Update wallet balances in the same transaction
+        await transactionalEntityManager.save(updatedWallets);
+      } catch (error) {
+        console.error('Transaction error:', error);
+        throw new Error('Transaction failed');
+      }
     });
   }
 
