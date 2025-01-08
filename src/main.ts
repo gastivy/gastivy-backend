@@ -14,6 +14,7 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:3000', 'https://gastivy.netlify.app'], // Replace with actual frontend URLs
     methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
     credentials: true, // Include credentials if needed (cookies, etc.)
   });
 
