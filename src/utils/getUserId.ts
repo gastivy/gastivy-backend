@@ -10,6 +10,11 @@ export const getUserId = (request: Request): string => {
     throw new Error('Token is missing');
   }
 
-  const decoded = jwtService.decode(token) as { id: string };
-  return decoded?.id;
+  try {
+    // Verifikasi token terlebih dahulu
+    const decoded = jwtService.verify(token) as { id: string };
+    return decoded.id;
+  } catch {
+    throw new Error('Invalid or expired token');
+  }
 };
