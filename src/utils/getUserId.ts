@@ -1,20 +1,29 @@
+import * as dotenv from 'dotenv';
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-const jwtService = new JwtService({
-  secret: process.env.JWT_SECRET,
-});
+dotenv.config();
 
 export const getUserId = (request: Request): string => {
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET is not defined in the environment');
+  }
+
+  const jwtService = new JwtService({
+    secret: process.env.JWT_SECRET,
+  });
+
   const token = request.headers['authorization']?.split(' ')[1];
   if (!token) {
     throw new Error('Token is missing');
   }
 
   try {
-    // Verifikasi token terlebih dahulu
     const decoded = jwtService.verify(token) as { id: string };
     return decoded.id;
   } catch {
-    throw new Error('Invalid or expired token');
+    throw new UnauthorizedException('Invalid or expired token');
   }
 };
