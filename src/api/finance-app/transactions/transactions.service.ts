@@ -151,7 +151,14 @@ export class TransactionsService {
     });
   }
 
-  async get(userId: string, limit?: number, start?: Date, end?: Date) {
+  async get(
+    userId: string,
+    limit?: number,
+    start?: Date,
+    end?: Date,
+    categoryId?: string[],
+    walletId?: string[],
+  ) {
     const startDate = start && new Date(start);
     const endDate = end && new Date(end);
     if (start && end) {
@@ -192,6 +199,21 @@ export class TransactionsService {
         start: startDate,
         end: endDate,
       });
+    }
+
+    if (categoryId && categoryId.length > 0) {
+      query.andWhere('transaction.category_id IN (:...categoryId)', {
+        categoryId,
+      });
+    }
+
+    if (walletId && walletId.length > 0) {
+      query.andWhere(
+        '(transaction.from_wallet IN (:...walletId) OR transaction.to_wallet IN (:...walletId))',
+        {
+          walletId,
+        },
+      );
     }
 
     const response = await query.getRawMany();
