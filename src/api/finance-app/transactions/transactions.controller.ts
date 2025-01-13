@@ -23,6 +23,7 @@ export class TransactionsController {
   async getTransaction(
     @Req() request: Request,
     @Query('limit') limit?: number,
+    @Query('page') page?: number,
     @Query('category_ids') category_ids?: string[],
     @Query('wallet_ids') wallet_ids?: string[],
     @Query('start_date') start_date?: Date,
@@ -32,6 +33,7 @@ export class TransactionsController {
     return this.service.get(
       userId,
       limit,
+      page,
       start_date,
       end_date,
       category_ids,

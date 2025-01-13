@@ -153,7 +153,8 @@ export class TransactionsService {
 
   async get(
     userId: string,
-    limit?: number,
+    limit = 50,
+    page = 1,
     start?: Date,
     end?: Date,
     categoryId?: string[],
@@ -190,10 +191,6 @@ export class TransactionsService {
       )
       .addOrderBy('transaction.id', 'ASC');
 
-    if (limit) {
-      query.limit(limit);
-    }
-
     if (startDate && endDate) {
       query.andWhere('transaction.date BETWEEN :start AND :end', {
         start: startDate,
@@ -216,13 +213,38 @@ export class TransactionsService {
       );
     }
 
+    // Get the total count of transactions
+    const totalTransaction = await query.getCount();
+
+    if (totalTransaction === 0) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    const totalPages = Math.ceil(
+      totalTransaction / (limit || totalTransaction),
+    );
+
+    if (Number(page) && limit) {
+      query.offset((Number(page) - 1) * limit);
+      query.limit(limit);
+    } else if (limit) {
+      query.limit(limit);
+    }
+
     const response = await query.getRawMany();
 
     if (!response) {
       throw new NotFoundException('Transaction not found');
     }
 
-    return response;
+    return {
+      data: response,
+      pagination: {
+        total_pages: totalPages,
+        current_page: Number(page),
+        total_data: totalTransaction,
+      },
+    };
   }
 
   async getDetail(

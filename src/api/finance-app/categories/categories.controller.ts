@@ -27,11 +27,9 @@ export class CategoriesTransactionsController {
 
   @Get(':categoryId')
   async getDetailCategory(
-    @Req() request: Request,
     @Param() { categoryId }: { categoryId: string },
   ): Promise<CategoriesTransactions> {
-    const userId = getUserId(request);
-    return this.service.findByCategoryId(userId, categoryId);
+    return this.service.findByCategoryId(categoryId);
   }
 
   @Post()

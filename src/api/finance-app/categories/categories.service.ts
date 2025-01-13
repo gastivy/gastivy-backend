@@ -39,19 +39,25 @@ export class CategoriesTransactionsService {
     );
   }
 
-  async findByCategoryId(
-    userId: string,
-    categoryId: string,
-  ): Promise<CategoriesTransactions> {
-    const response = await this.categoryTransactionsRepository.findOne({
-      where: { user_id: userId, id: categoryId },
-    });
+  async findByCategoryId(categoryId: string): Promise<CategoriesTransactions> {
+    const response = await this.dataSource
+      .getRepository(CategoriesTransactions)
+      .createQueryBuilder('category')
+      .select([
+        'category.id AS id',
+        'category.name AS name',
+        'category.type AS type',
+      ])
+      .andWhere('category.id = :categoryId', {
+        categoryId,
+      })
+      .getRawMany();
 
     if (!response) {
       throw new NotFoundException('Category Transaction not found');
     }
 
-    return response;
+    return response[0];
   }
 
   async create(body: CreateCategoryTransactionsDto, user_id: string) {
