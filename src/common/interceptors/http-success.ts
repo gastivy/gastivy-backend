@@ -13,7 +13,7 @@ export class SuccessResponseInterceptor<T> implements NestInterceptor<T, any> {
     const response = context.switchToHttp().getResponse();
     return next.handle().pipe(
       map((data) => {
-        if (data.pagination) {
+        if (data && data.pagination) {
           return {
             code: response.statusCode,
             message: 'Success',
