@@ -121,7 +121,6 @@ export class AuthService {
     }
   }
 
-  @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     const isProduction = process.env.NODE_ENV === 'production';
     const KEY_REFRESH_TOKEN = isProduction ? 'R_GSTID' : 'R_STG_GSTID';
