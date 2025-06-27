@@ -8,6 +8,7 @@ import {
   NotFoundExceptionFilter,
   UnauthorizedExceptionFilter,
 } from './common/execptions/exceptions';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +28,7 @@ async function bootstrap() {
     new ForbiddenExceptionFilter(),
     new NotFoundExceptionFilter(),
   );
+  app.use(cookieParser());
 
   await app.listen(4000);
 }
