@@ -41,7 +41,7 @@ export class StatisticsFinanceService {
         `,
       ])
       .where(
-        'categoryTransaction.user_id = :user_id OR categoryTransaction.user_id IS NULL OR transaction.user_id IS NULL',
+        'categoryTransaction.user_id = :user_id OR transaction.money = 0',
         { user_id },
       )
       .orderBy('categoryTransaction.name', 'ASC')

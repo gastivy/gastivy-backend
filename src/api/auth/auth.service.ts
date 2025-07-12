@@ -2,45 +2,61 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  Post,
   Req,
   Res,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { User } from '../user/user.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
+import { transactionalQuery } from 'src/utils/transactionalQuery';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly dataSource: DataSource,
+
     @InjectRepository(User)
     private readonly authRepository: Repository<User>,
     private readonly jwtService: JwtService,
   ) {}
 
   async register(body: RegisterDto): Promise<User> {
-    const existingUser = await this.authRepository.findOne({
-      where: { email: body.email },
+    return transactionalQuery(this.dataSource, async (qr) => {
+      const existingUser = await qr.manager.findOne(User, {
+        where: { email: body.email },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(body.password, salt);
+
+      const user = qr.manager.create(User, {
+        ...body,
+        password: hashedPassword,
+      });
+
+      const savedUser = await qr.manager.save(User, user);
+      await qr.query(`
+        INSERT INTO categories_transactions (user_id, name, type)
+        VALUES
+          ('${savedUser.id}', 'Transfer', 3),
+          ('${savedUser.id}', 'Fee Transfer', 4);
+      `);
+
+      await qr.query(`
+        INSERT INTO wallets (user_id, name, balance, type)
+      `);
+
+      return savedUser;
     });
-
-    if (existingUser) {
-      throw new ConflictException('Email already exists');
-    }
-
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(body.password, salt);
-
-    const user = this.authRepository.create({
-      ...body,
-      password: hashedPassword,
-    });
-    return await this.authRepository.save(user);
   }
 
   async login(
