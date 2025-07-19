@@ -77,8 +77,8 @@ export class AuthService {
 
     const { email, id, name } = user;
     const isProduction = process.env.NODE_ENV === 'production';
-    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STG_GSTID';
-    const KEY_REFRESH_TOKEN = isProduction ? 'R_GSTID' : 'R_STG_GSTID';
+    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STGGSTID';
+    const KEY_REFRESH_TOKEN = isProduction ? 'RGSTID' : 'RSTGGSTID';
 
     const accessToken = this.jwtService.sign(
       { email, id, name },
@@ -115,8 +115,8 @@ export class AuthService {
     @Res({ passthrough: true }) res: Response,
   ) {
     const isProduction = process.env.NODE_ENV === 'production';
-    const KEY_REFRESH_TOKEN = isProduction ? 'R_GSTID' : 'R_STG_GSTID';
-    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STG_GSTID';
+    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STGGSTID';
+    const KEY_REFRESH_TOKEN = isProduction ? 'RGSTID' : 'RSTGGSTID';
     const refreshToken = req.cookies[KEY_REFRESH_TOKEN];
     if (!refreshToken) throw new NotFoundException('Refresh token missing');
 
@@ -159,8 +159,8 @@ export class AuthService {
 
   async logout(@Res({ passthrough: true }) res: Response) {
     const isProduction = process.env.NODE_ENV === 'production';
-    const KEY_REFRESH_TOKEN = isProduction ? 'R_GSTID' : 'R_STG_GSTID';
-    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STG_GSTID';
+    const KEY_REFRESH_TOKEN = isProduction ? 'RGSTID' : 'RSTGGSTID';
+    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STGGSTID';
 
     res.clearCookie(KEY_ACCESS_TOKEN, { path: '/' });
     res.clearCookie(KEY_REFRESH_TOKEN, { path: '/' });

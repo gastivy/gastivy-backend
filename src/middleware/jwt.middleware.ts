@@ -16,7 +16,7 @@ export class JwtMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     const isProduction = process.env.NODE_ENV === 'production';
-    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STG_GSTID';
+    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STGGSTID';
     const token = req.cookies[KEY_ACCESS_TOKEN];
 
     if (!token) {
