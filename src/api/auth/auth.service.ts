@@ -14,6 +14,11 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 import { transactionalQuery } from 'src/utils/transactionalQuery';
+import {
+  IS_PRODUCTION,
+  KEY_ACCESS_TOKEN,
+  KEY_REFRESH_TOKEN,
+} from 'src/constants/accessToken';
 
 @Injectable()
 export class AuthService {
@@ -76,9 +81,6 @@ export class AuthService {
     }
 
     const { email, id, name } = user;
-    const isProduction = process.env.NODE_ENV === 'production';
-    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STGGSTID';
-    const KEY_REFRESH_TOKEN = isProduction ? 'RGSTID' : 'RSTGGSTID';
 
     const accessToken = this.jwtService.sign(
       { email, id, name },
@@ -92,7 +94,7 @@ export class AuthService {
     // Access Token
     res.cookie(KEY_ACCESS_TOKEN, accessToken, {
       httpOnly: true,
-      secure: isProduction,
+      secure: IS_PRODUCTION,
       sameSite: 'lax',
       path: '/',
       expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
@@ -101,7 +103,7 @@ export class AuthService {
     // Refresh Token
     res.cookie(KEY_REFRESH_TOKEN, refreshToken, {
       httpOnly: true,
-      secure: isProduction,
+      secure: IS_PRODUCTION,
       sameSite: 'lax',
       path: '/',
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -114,9 +116,6 @@ export class AuthService {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const isProduction = process.env.NODE_ENV === 'production';
-    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STGGSTID';
-    const KEY_REFRESH_TOKEN = isProduction ? 'RGSTID' : 'RSTGGSTID';
     const refreshToken = req.cookies[KEY_REFRESH_TOKEN];
     if (!refreshToken) throw new NotFoundException('Refresh token missing');
 
@@ -135,7 +134,7 @@ export class AuthService {
       // Access Token
       res.cookie(KEY_ACCESS_TOKEN, accessToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: IS_PRODUCTION,
         sameSite: 'none',
         path: '/',
         expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
@@ -144,7 +143,7 @@ export class AuthService {
       // Refresh Token
       res.cookie(KEY_REFRESH_TOKEN, newRefreshToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: IS_PRODUCTION,
         sameSite: 'none',
         path: '/',
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -158,10 +157,6 @@ export class AuthService {
   }
 
   async logout(@Res({ passthrough: true }) res: Response) {
-    const isProduction = process.env.NODE_ENV === 'production';
-    const KEY_REFRESH_TOKEN = isProduction ? 'RGSTID' : 'RSTGGSTID';
-    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STGGSTID';
-
     res.clearCookie(KEY_ACCESS_TOKEN, { path: '/' });
     res.clearCookie(KEY_REFRESH_TOKEN, { path: '/' });
     return { message: 'Logged out' };

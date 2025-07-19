@@ -6,6 +6,7 @@ import {
 import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
+import { KEY_ACCESS_TOKEN } from 'src/constants/accessToken';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
@@ -15,8 +16,6 @@ export class JwtMiddleware implements NestMiddleware {
   ) {}
 
   use(req: Request, res: Response, next: NextFunction) {
-    const isProduction = process.env.NODE_ENV === 'production';
-    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STGGSTID';
     const token = req.cookies[KEY_ACCESS_TOKEN];
 
     if (!token) {
