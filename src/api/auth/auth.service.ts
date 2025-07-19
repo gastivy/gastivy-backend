@@ -19,6 +19,7 @@ import {
   KEY_ACCESS_TOKEN,
   KEY_REFRESH_TOKEN,
 } from 'src/constants/accessToken';
+import { serialize } from 'cookie';
 
 @Injectable()
 export class AuthService {
@@ -108,6 +109,17 @@ export class AuthService {
       path: '/',
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
+
+    // Set Header
+    res.setHeader(
+      'Set-Cookie',
+      serialize(KEY_ACCESS_TOKEN, accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      }),
+    );
 
     return { token: accessToken };
   }
