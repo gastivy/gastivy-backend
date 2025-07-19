@@ -136,7 +136,7 @@ export class AuthService {
       res.cookie(KEY_ACCESS_TOKEN, accessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'lax',
+        sameSite: 'none',
         path: '/',
         expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       });
@@ -145,7 +145,7 @@ export class AuthService {
       res.cookie(KEY_REFRESH_TOKEN, newRefreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'lax',
+        sameSite: 'none',
         path: '/',
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       });
