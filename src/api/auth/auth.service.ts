@@ -77,6 +77,7 @@ export class AuthService {
 
     const { email, id, name } = user;
     const isProduction = process.env.NODE_ENV === 'production';
+    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STG_GSTID';
     const KEY_REFRESH_TOKEN = isProduction ? 'R_GSTID' : 'R_STG_GSTID';
 
     const accessToken = this.jwtService.sign(
@@ -87,6 +88,15 @@ export class AuthService {
       { email, id, name },
       { expiresIn: '7d' },
     );
+
+    // Access Token
+    res.cookie(KEY_ACCESS_TOKEN, accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    });
 
     // Refresh Token
     res.cookie(KEY_REFRESH_TOKEN, refreshToken, {
@@ -106,6 +116,7 @@ export class AuthService {
   ) {
     const isProduction = process.env.NODE_ENV === 'production';
     const KEY_REFRESH_TOKEN = isProduction ? 'R_GSTID' : 'R_STG_GSTID';
+    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STG_GSTID';
     const refreshToken = req.cookies[KEY_REFRESH_TOKEN];
     if (!refreshToken) throw new NotFoundException('Refresh token missing');
 
@@ -120,6 +131,15 @@ export class AuthService {
         { id: payload.id, email: payload.email, name: payload.name },
         { expiresIn: '7d' },
       );
+
+      // Access Token
+      res.cookie(KEY_ACCESS_TOKEN, accessToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        path: '/',
+        expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      });
 
       // Refresh Token
       res.cookie(KEY_REFRESH_TOKEN, newRefreshToken, {
@@ -140,7 +160,9 @@ export class AuthService {
   async logout(@Res({ passthrough: true }) res: Response) {
     const isProduction = process.env.NODE_ENV === 'production';
     const KEY_REFRESH_TOKEN = isProduction ? 'R_GSTID' : 'R_STG_GSTID';
+    const KEY_ACCESS_TOKEN = isProduction ? 'GSTID' : 'STG_GSTID';
 
+    res.clearCookie(KEY_ACCESS_TOKEN, { path: '/' });
     res.clearCookie(KEY_REFRESH_TOKEN, { path: '/' });
     return { message: 'Logged out' };
   }

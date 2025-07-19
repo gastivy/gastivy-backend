@@ -12,7 +12,6 @@ import {
 import { ActivityService } from './activity.service';
 import { Activity } from './activity.entity';
 import { CreateActivityDto } from './dto/create-activity';
-import { getUserId } from 'src/utils/getUserId';
 import { UpdateActivityDto } from './dto/update-activity';
 
 @Controller('/activity-app/activity')
@@ -24,7 +23,8 @@ export class ActivityController {
     @Body() body: CreateActivityDto,
     @Req() request: Request,
   ): Promise<Activity[]> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.create(body, userId);
   }
 
@@ -35,7 +35,8 @@ export class ActivityController {
     @Query('start_date') start_date?: Date,
     @Query('end_date') end_date?: Date,
   ) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.getAll(userId, category_id, start_date, end_date);
   }
 
@@ -44,7 +45,8 @@ export class ActivityController {
     @Req() request: Request,
     @Param('activityId') activityId: string,
   ) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.softDelete(userId, activityId);
   }
 
@@ -54,7 +56,8 @@ export class ActivityController {
     @Param('activityId') activityId: string,
     @Body() body: UpdateActivityDto,
   ) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.update(userId, activityId, body);
   }
 }

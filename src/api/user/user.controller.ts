@@ -1,7 +1,6 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
-import { getUserId } from 'src/utils/getUserId';
 
 @Controller('user')
 export class UserController {
@@ -9,7 +8,8 @@ export class UserController {
 
   @Get()
   async getUser(@Req() request: Request): Promise<Omit<User, 'password'>> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.findById(userId);
   }
 }

@@ -1,5 +1,4 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
-import { getUserId } from 'src/utils/getUserId';
 import { StatisticsFinanceService } from './statistics.service';
 
 @Controller('/finance-app/statistics')
@@ -12,7 +11,8 @@ export class StatisticsFinanceController {
     @Query('start_date') start_date?: Date,
     @Query('end_date') end_date?: Date,
   ) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.get(userId, start_date, end_date);
   }
 }

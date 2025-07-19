@@ -14,7 +14,6 @@ import { Categories } from './categories.entity';
 import { CreateCategoryDto } from './dto/create-category';
 import { UpdateCategoryDto } from './dto/update-category';
 import { DeleteCategoryDto } from './dto/delete-category';
-import { getUserId } from 'src/utils/getUserId';
 
 @Controller('/activity-app/categories')
 export class CategoriesController {
@@ -26,13 +25,15 @@ export class CategoriesController {
     @Query('start_date') start_date?: Date,
     @Query('end_date') end_date?: Date,
   ): Promise<Categories[]> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.findAll(userId, start_date, end_date);
   }
 
   @Get('/list')
   async getListCategory(@Req() request: Request): Promise<Categories[]> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.listCategory(userId);
   }
 
@@ -41,7 +42,8 @@ export class CategoriesController {
     @Req() request: Request,
     @Param() { categoryId }: { categoryId: string },
   ): Promise<Categories> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.findByCategoryId(userId, categoryId);
   }
 
@@ -50,7 +52,8 @@ export class CategoriesController {
     @Body() body: CreateCategoryDto,
     @Req() request: Request,
   ): Promise<void> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     this.service.create(body, userId);
   }
 
@@ -59,7 +62,8 @@ export class CategoriesController {
     @Body() body: UpdateCategoryDto,
     @Req() request: Request,
   ): Promise<void> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.update(body, userId);
   }
 
@@ -68,7 +72,8 @@ export class CategoriesController {
     @Body() body: DeleteCategoryDto,
     @Req() request: Request,
   ) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.delete(body.categoryIds, userId);
   }
 }

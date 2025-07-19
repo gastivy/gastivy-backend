@@ -9,7 +9,6 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { getUserId } from 'src/utils/getUserId';
 import { CreateTransactionDto } from './dto/create-transaction';
 import { TransactionsService } from './transactions.service';
 import { Transactions } from './transactions.entity';
@@ -29,7 +28,8 @@ export class TransactionsController {
     @Query('start_date') start_date?: Date,
     @Query('end_date') end_date?: Date,
   ) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.get(
       userId,
       limit,
@@ -46,7 +46,8 @@ export class TransactionsController {
     @Req() request: Request,
     @Param('transactionId') transactionId: string,
   ): Promise<Transactions> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.getDetail(userId, transactionId);
   }
 
@@ -55,7 +56,8 @@ export class TransactionsController {
     @Body() body: CreateTransactionDto,
     @Req() request: Request,
   ): Promise<void> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     this.service.create(body, userId);
   }
 
@@ -64,7 +66,8 @@ export class TransactionsController {
     @Req() request: Request,
     @Param('transactionId') transactionId: string,
   ) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.delete(transactionId, userId);
   }
 
@@ -73,7 +76,8 @@ export class TransactionsController {
     @Body() body: UpdateTransactionDto,
     @Req() request: Request,
   ): Promise<void> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.update(body, userId);
   }
 }

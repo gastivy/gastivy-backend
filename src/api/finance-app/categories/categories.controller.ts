@@ -9,7 +9,6 @@ import {
   Req,
 } from '@nestjs/common';
 import { CategoriesTransactionsService } from './categories.service';
-import { getUserId } from 'src/utils/getUserId';
 import { CreateCategoryTransactionsDto } from './dto/create-category';
 import { UpdateCategoryTransactionDto } from './dto/update-category';
 import { CategoriesTransactions } from './categories.entity';
@@ -21,7 +20,8 @@ export class CategoriesTransactionsController {
 
   @Get()
   async getCategories(@Req() request: Request) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.get(userId);
   }
 
@@ -37,7 +37,8 @@ export class CategoriesTransactionsController {
     @Body() body: CreateCategoryTransactionsDto,
     @Req() request: Request,
   ): Promise<void> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     this.service.create(body, userId);
   }
 
@@ -46,7 +47,8 @@ export class CategoriesTransactionsController {
     @Body() body: UpdateCategoryTransactionDto,
     @Req() request: Request,
   ): Promise<void> {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.update(body, userId);
   }
 
@@ -55,7 +57,8 @@ export class CategoriesTransactionsController {
     @Body() body: DeleteCategoryTransactionDto,
     @Req() request: Request,
   ) {
-    const userId = getUserId(request);
+    const user = request['user'];
+    const userId = user.id;
     return this.service.delete(body.categoryId, userId);
   }
 }
