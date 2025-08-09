@@ -15,8 +15,6 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'https://gastivy.netlify.app',
-      'https://gastivy-web.vercel.app',
       'https://gastivy.my.id',
       'https://www.gastivy.my.id',
     ], // Replace with actual frontend URLs
