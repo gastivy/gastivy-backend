@@ -95,7 +95,7 @@ export class AuthService {
     res.cookie(KEY_ACCESS_TOKEN, accessToken, {
       httpOnly: false,
       secure: IS_PRODUCTION,
-      sameSite: IS_PRODUCTION ? 'none' : 'lax',
+      sameSite: 'lax',
       // partitioned: IS_PRODUCTION,
       path: '/',
       domain: !IS_PRODUCTION ? 'localhost' : undefined,
@@ -106,7 +106,7 @@ export class AuthService {
     res.cookie(KEY_REFRESH_TOKEN, refreshToken, {
       httpOnly: true,
       secure: IS_PRODUCTION,
-      sameSite: IS_PRODUCTION ? 'none' : 'lax',
+      sameSite: 'lax',
       // partitioned: IS_PRODUCTION,
       path: '/',
       domain: !IS_PRODUCTION ? 'localhost' : undefined,
