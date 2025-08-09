@@ -1,18 +1,22 @@
 services:
   postgres-db:
     image: postgres:16
-    container_name: postgresql
+    container_name: postgresku
     restart: always
     environment:
-      POSTGRES_USER: gastivy_author
-      POSTGRES_PASSWORD: gastivypassword
-      POSTGRES_DB: gastivy-db
+      PGTZ: "Asia/Jakarta"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
-    networks:
-      - local_network
+    expose:
+      - "5432"
     volumes:
       - ./docker/postgres-16:/var/lib/postgresql/data
+    networks:
+      - local_network
+
 networks:
   local_network:
+    name: local_network
     driver: bridge
