@@ -95,7 +95,7 @@ export class AuthService {
     res.cookie(KEY_ACCESS_TOKEN, accessToken, {
       httpOnly: false,
       secure: IS_PRODUCTION,
-      sameSite: 'lax',
+      sameSite: 'none',
       // partitioned: IS_PRODUCTION,
       path: '/',
       domain: '.vercel.app',
@@ -107,7 +107,7 @@ export class AuthService {
     res.cookie(KEY_REFRESH_TOKEN, refreshToken, {
       httpOnly: true,
       secure: IS_PRODUCTION,
-      sameSite: 'lax',
+      sameSite: 'none',
       // partitioned: IS_PRODUCTION,
       path: '/',
       // domain: !IS_PRODUCTION ? 'localhost' : undefined,
