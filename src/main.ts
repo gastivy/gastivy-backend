@@ -18,6 +18,7 @@ async function bootstrap() {
       'https://gastivy.netlify.app',
       'https://gastivy-web.vercel.app',
       'https://gastivy.my.id',
+      'https://www.gastivy.my.id',
     ], // Replace with actual frontend URLs
     methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
