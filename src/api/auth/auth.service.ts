@@ -98,6 +98,7 @@ export class AuthService {
       sameSite: 'none',
       partitioned: true,
       path: '/',
+      domain: !IS_PRODUCTION ? 'localhost' : undefined,
       expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // an hour
     });
 
