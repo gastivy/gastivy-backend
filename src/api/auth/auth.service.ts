@@ -106,9 +106,10 @@ export class AuthService {
     res.cookie(KEY_REFRESH_TOKEN, refreshToken, {
       httpOnly: true,
       secure: IS_PRODUCTION,
-      sameSite: 'none',
-      partitioned: true,
+      sameSite: IS_PRODUCTION ? 'none' : 'lax',
+      partitioned: IS_PRODUCTION,
       path: '/',
+      domain: !IS_PRODUCTION ? 'localhost' : undefined,
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
