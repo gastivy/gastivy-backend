@@ -130,10 +130,6 @@ export class AuthService {
         { id: payload.id, email: payload.email, name: payload.name },
         { expiresIn: '3d' },
       );
-      const newRefreshToken = this.jwtService.sign(
-        { id: payload.id, email: payload.email, name: payload.name },
-        { expiresIn: '7d' },
-      );
 
       // Access Token
       res.cookie(KEY_ACCESS_TOKEN, accessToken, {
@@ -142,15 +138,6 @@ export class AuthService {
         sameSite: 'none',
         path: '/',
         expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      });
-
-      // Refresh Token
-      res.cookie(KEY_REFRESH_TOKEN, newRefreshToken, {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: 'none',
-        path: '/',
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       });
 
       return { accessToken };
