@@ -95,8 +95,8 @@ export class AuthService {
     res.cookie(KEY_ACCESS_TOKEN, accessToken, {
       httpOnly: false,
       secure: IS_PRODUCTION,
-      sameSite: 'none',
-      partitioned: true,
+      sameSite: IS_PRODUCTION ? 'none' : 'lax',
+      partitioned: IS_PRODUCTION,
       path: '/',
       domain: !IS_PRODUCTION ? 'localhost' : undefined,
       expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // an hour
