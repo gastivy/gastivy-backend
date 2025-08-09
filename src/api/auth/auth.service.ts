@@ -98,7 +98,8 @@ export class AuthService {
       sameSite: 'lax',
       // partitioned: IS_PRODUCTION,
       path: '/',
-      domain: !IS_PRODUCTION ? 'localhost' : undefined,
+      domain: '.vercel.app',
+      // domain: !IS_PRODUCTION ? 'localhost' : undefined,
       expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // an hour
     });
 
@@ -109,7 +110,8 @@ export class AuthService {
       sameSite: 'lax',
       // partitioned: IS_PRODUCTION,
       path: '/',
-      domain: !IS_PRODUCTION ? 'localhost' : undefined,
+      // domain: !IS_PRODUCTION ? 'localhost' : undefined,
+      domain: '.vercel.app',
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
