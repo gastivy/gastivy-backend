@@ -93,12 +93,12 @@ export class AuthService {
 
     // Access Token
     res.cookie(KEY_ACCESS_TOKEN, accessToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: IS_PRODUCTION,
       sameSite: 'none',
       partitioned: true,
       path: '/',
-      expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // an hour
     });
 
     // Refresh Token
@@ -108,7 +108,7 @@ export class AuthService {
       sameSite: 'none',
       partitioned: true,
       path: '/',
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
     return { token: accessToken };
