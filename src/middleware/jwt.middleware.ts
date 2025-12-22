@@ -16,6 +16,8 @@ export class JwtMiddleware implements NestMiddleware {
   ) {}
 
   use(req: Request, res: Response, next: NextFunction) {
+    if (req.method === 'OPTIONS') return next();
+
     const token = req.cookies[KEY_ACCESS_TOKEN];
 
     if (!token) {
