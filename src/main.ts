@@ -17,8 +17,8 @@ async function bootstrap() {
       'http://localhost:3000',
       'https://gastivy.my.id',
       'https://www.gastivy.my.id',
-      'https://stg-lyceum.gastivy.my.id/',
-      'https://www.stg-lyceum.gastivy.my.id/',
+      'https://stg-lyceum.gastivy.my.id',
+      'https://www.stg-lyceum.gastivy.my.id',
     ], // Replace with actual frontend URLs
     methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
