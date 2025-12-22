@@ -13,26 +13,17 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // server-to-server
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'https://gastivy.my.id',
-        'https://www.gastivy.my.id',
-        'https://stg-lyceum.gastivy.my.id',
-        'https://www.stg-lyceum.gastivy.my.id',
-      ];
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`Origin ${origin} not allowed by CORS`), false);
-      }
-    },
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    origin: [
+      'http://localhost:3000',
+      'https://gastivy.my.id',
+      'https://www.gastivy.my.id',
+      'https://stg-lyceum.gastivy.my.id',
+      'https://www.stg-lyceum.gastivy.my.id',
+    ],
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
     credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
+    maxAge: 0,
   });
 
   app.useGlobalPipes(new ValidationPipe()); // Enable validation globally
