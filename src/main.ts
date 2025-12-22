@@ -14,9 +14,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     origin: (origin, callback) => {
-      // Jika origin tidak ada (server-to-server), izinkan
-      if (!origin) return callback(null, true);
-
+      if (!origin) return callback(null, true); // server-to-server
       const allowedOrigins = [
         'http://localhost:3000',
         'https://gastivy.my.id',
@@ -24,17 +22,17 @@ async function bootstrap() {
         'https://stg-lyceum.gastivy.my.id',
         'https://www.stg-lyceum.gastivy.my.id',
       ];
-
       if (allowedOrigins.includes(origin)) {
-        callback(null, true); // Dinamis, browser akan menerima origin ini
+        callback(null, true);
       } else {
-        console.warn(`CORS blocked: ${origin}`);
         callback(new Error(`Origin ${origin} not allowed by CORS`), false);
       }
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
-    credentials: true, // ini penting karena pakai cookies
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   app.useGlobalPipes(new ValidationPipe()); // Enable validation globally
