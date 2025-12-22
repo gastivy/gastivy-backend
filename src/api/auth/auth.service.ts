@@ -58,6 +58,8 @@ export class AuthService {
 
       await qr.query(`
         INSERT INTO wallets (user_id, name, balance, type)
+        VALUES
+          ('${savedUser.id}', 'My Wallet', 0, 1)
       `);
 
       return savedUser;

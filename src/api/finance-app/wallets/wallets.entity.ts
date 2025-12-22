@@ -23,6 +23,12 @@ export class Wallet {
   @Column({ type: 'int', default: 0 })
   balance: number;
 
+  /**
+   * Cash: 1
+   * ATH: 2
+   * E-Money: 3
+   * Assets: 4
+   */
   @Column({ type: 'int' })
   type: number;
 
