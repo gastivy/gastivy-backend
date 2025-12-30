@@ -31,13 +31,22 @@ export class ActivityController {
   @Get()
   async getAllActivity(
     @Req() request: Request,
+    @Query('limit') limit?: number,
+    @Query('page') page?: number,
     @Query('category_id') category_id?: string[],
     @Query('start_date') start_date?: Date,
     @Query('end_date') end_date?: Date,
   ) {
     const user = request['user'];
     const userId = user.id;
-    return this.service.getAll(userId, category_id, start_date, end_date);
+    return this.service.getAll(
+      userId,
+      limit,
+      page,
+      category_id,
+      start_date,
+      end_date,
+    );
   }
 
   @Delete(':activityId')

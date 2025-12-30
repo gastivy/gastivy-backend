@@ -37,10 +37,12 @@ export class ActivityService {
 
   async getAll(
     userId: string,
+    limit = 50,
+    page = 1,
     categoryId?: string[],
     start?: Date,
     end?: Date,
-  ): Promise<Activity[]> {
+  ) {
     const categoriesRaw = await this.categoryRepository.find({
       where: { user_id: userId },
     });
@@ -56,22 +58,36 @@ export class ActivityService {
       endDate.setHours(23, 59, 59, 999);
     }
 
-    const activities = await this.activityRepository.find({
-      where: {
-        user_id: userId,
-        deleted_at: IsNull(),
-        ...(categoryId && { category_id: In(categoryId) }),
-        ...(start && end && { start_date: Between(startDate, endDate) }),
-      },
-      order: {
-        start_date: 'DESC',
-      },
-    });
+    const [activities, totalTransaction] =
+      await this.activityRepository.findAndCount({
+        where: {
+          user_id: userId,
+          deleted_at: IsNull(),
+          ...(categoryId && { category_id: In(categoryId) }),
+          ...(start && end && { start_date: Between(startDate, endDate) }),
+        },
+        order: {
+          start_date: 'DESC',
+        },
+        take: limit,
+        skip: (page - 1) * limit,
+      });
 
-    return activities.map((activity) => ({
+    const totalPages = Math.ceil(totalTransaction / limit);
+
+    const response = activities.map((activity) => ({
       ...activity,
       category_name: categories[activity.category_id] || '',
     }));
+
+    return {
+      data: response,
+      pagination: {
+        total_pages: totalPages,
+        current_page: Number(page),
+        total_data: totalTransaction,
+      },
+    };
   }
 
   async softDelete(user_id: string, id: string) {
