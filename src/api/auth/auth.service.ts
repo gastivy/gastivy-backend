@@ -97,17 +97,17 @@ export class AuthService {
     res.cookie(KEY_ACCESS_TOKEN, accessToken, {
       httpOnly: false,
       secure: IS_PRODUCTION,
-      sameSite: 'none',
+      sameSite: 'lax',
       path: '/',
       domain: !IS_PRODUCTION ? 'localhost' : '.gastivy.my.id',
-      expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // an hour
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // a day
     });
 
     // Refresh Token
     res.cookie(KEY_REFRESH_TOKEN, refreshToken, {
       httpOnly: true,
       secure: IS_PRODUCTION,
-      sameSite: 'none',
+      sameSite: 'lax',
       path: '/',
       domain: !IS_PRODUCTION ? 'localhost' : '.gastivy.my.id',
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
@@ -135,7 +135,7 @@ export class AuthService {
       res.cookie(KEY_ACCESS_TOKEN, accessToken, {
         httpOnly: true,
         secure: IS_PRODUCTION,
-        sameSite: 'none',
+        sameSite: 'lax',
         path: '/',
         expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // an hour
       });
