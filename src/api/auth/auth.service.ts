@@ -148,8 +148,18 @@ export class AuthService {
   }
 
   async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie(KEY_ACCESS_TOKEN, { path: '/' });
-    res.clearCookie(KEY_REFRESH_TOKEN, { path: '/' });
+    res.clearCookie(KEY_ACCESS_TOKEN, {
+      path: '/',
+      domain: '.gastivy.my.id',
+      sameSite: 'none',
+      secure: true,
+    });
+    res.clearCookie(KEY_REFRESH_TOKEN, {
+      path: '/',
+      domain: '.gastivy.my.id',
+      sameSite: 'none',
+      secure: true,
+    });
     return { message: 'Logged out' };
   }
 }
