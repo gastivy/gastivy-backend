@@ -86,7 +86,7 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(
       { email, id, name },
-      { expiresIn: '1d' },
+      { expiresIn: '3d' },
     );
     const refreshToken = this.jwtService.sign(
       { email, id, name },
@@ -100,7 +100,7 @@ export class AuthService {
       sameSite: 'lax',
       path: '/',
       domain: !IS_PRODUCTION ? 'localhost' : '.gastivy.my.id',
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // a day
+      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
     });
 
     // Refresh Token
@@ -128,7 +128,7 @@ export class AuthService {
 
       const accessToken = this.jwtService.sign(
         { id: payload.id, email: payload.email, name: payload.name },
-        { expiresIn: '1h' },
+        { expiresIn: '3d' },
       );
 
       // Access Token
@@ -137,7 +137,7 @@ export class AuthService {
         secure: IS_PRODUCTION,
         sameSite: 'lax',
         path: '/',
-        expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // an hour
+        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
       });
 
       return { accessToken };
