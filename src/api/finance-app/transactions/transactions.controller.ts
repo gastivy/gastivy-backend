@@ -58,7 +58,7 @@ export class TransactionsController {
   ): Promise<void> {
     const user = request['user'];
     const userId = user.id;
-    this.service.create(body, userId);
+    return this.service.create(body, userId);
   }
 
   @Delete(':transactionId')

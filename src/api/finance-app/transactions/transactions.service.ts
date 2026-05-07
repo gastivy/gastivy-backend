@@ -23,35 +23,38 @@ export class TransactionsService {
   ) {}
 
   async create(body: CreateTransactionDto, userId: string): Promise<void> {
-    const hasFee = body.transactions.find((item) => item.fee)?.fee || 0;
-
-    let categoryTransaction = undefined;
-    if (hasFee > 0) {
+    // Check if any transaction has a fee to find the fee category
+    let categoryTransaction: CategoriesTransactions | null = null;
+    const hasFee = body.transactions.some((item) => item.fee);
+    if (hasFee) {
       categoryTransaction = await this.categoryTransactionsRepository
         .createQueryBuilder('category')
         .where('category.type = :type', { type: TransactionsType.FEE_TRANSFER })
         .getOne();
     }
 
+    // Build transaction entities
     const transactions = body.transactions
       .flatMap((item) => {
-        if (Boolean(item.fee)) {
-          const id = uuidv4();
-          const mainTransaction = {
-            ...item,
-            id,
-          };
+        const mainId = uuidv4();
+        const mainTransaction = {
+          ...item,
+          id: mainId,
+          parent_transaction_id: null,
+        };
 
+        if (Boolean(item.fee)) {
           const feeObject = {
             ...item,
-            category_id: categoryTransaction.id,
-            parent_transaction_id: mainTransaction.id,
+            id: uuidv4(),
+            category_id: categoryTransaction!.id,
+            parent_transaction_id: mainId,
             money: item.fee,
             to_wallet: null,
           };
           return [mainTransaction, feeObject];
         }
-        return item;
+        return [mainTransaction];
       })
       .map((item) => {
         const transaction = new Transactions();
@@ -68,8 +71,7 @@ export class TransactionsService {
         return transaction;
       });
 
-    const wallets = await this.walletRepository.findBy({ user_id: userId });
-
+    // Group transactions by wallet to calculate balance changes
     const groupTransactions = (transactions: Transactions[]) => {
       const grouped = {
         from_wallet: {} as Record<string, number>,
@@ -89,30 +91,16 @@ export class TransactionsService {
       });
 
       return grouped;
-      /**
-       * return wallet like this:
-       * {
-       *    from_wallet: {
-       *       '796cfddb-d117-47d3-980a-422941f219da': 35000,
-       *       'da2bec42-aa8d-43f4-8f4c-a456a0a6545a': 340000
-       *    },
-       *    to_wallet: {
-       *      'da2bec42-aa8d-43f4-8f4c-a456a0a6545a': 300000,
-       *      '796cfddb-d117-47d3-980a-422941f219da': 340000
-       *    }
-       * }
-       *
-       */
     };
     const groupingTransactions = groupTransactions(transactions);
 
     const updateWalletBalances = (
-      wallets: { id: string; balance: number }[],
-      transactions: typeof groupingTransactions,
+      wallets: Wallet[],
+      transactionGroups: typeof groupingTransactions,
     ) => {
       // Reduce balances for "from_wallet"
       for (const [walletId, amount] of Object.entries(
-        transactions.from_wallet,
+        transactionGroups.from_wallet,
       )) {
         const wallet = wallets.find((w) => w.id === walletId);
         if (wallet) {
@@ -121,7 +109,9 @@ export class TransactionsService {
       }
 
       // Increase balances for "to_wallet"
-      for (const [walletId, amount] of Object.entries(transactions.to_wallet)) {
+      for (const [walletId, amount] of Object.entries(
+        transactionGroups.to_wallet,
+      )) {
         const wallet = wallets.find((w) => w.id === walletId);
         if (wallet) {
           wallet.balance += amount;
@@ -131,16 +121,24 @@ export class TransactionsService {
       return wallets;
     };
 
-    const updatedWallets = updateWalletBalances(wallets, groupingTransactions);
-
-    // Use the dataSource to manage the transaction
+    // Use the dataSource to manage the transaction atomically
     await this.dataSource.transaction(async (transactionalEntityManager) => {
       try {
-        const transaction = transactionalEntityManager.create(
+        // Load wallets INSIDE the transaction to ensure proper entity tracking
+        const wallets = await transactionalEntityManager.find(Wallet, {
+          where: { user_id: userId },
+        });
+
+        const updatedWallets = updateWalletBalances(
+          wallets,
+          groupingTransactions,
+        );
+
+        const transactionEntities = transactionalEntityManager.create(
           Transactions,
           transactions,
         );
-        await transactionalEntityManager.save(transaction);
+        await transactionalEntityManager.save(transactionEntities);
 
         // Update wallet balances in the same transaction
         await transactionalEntityManager.save(updatedWallets);
@@ -166,7 +164,7 @@ export class TransactionsService {
       endDate.setHours(23, 59, 59, 999);
     }
 
-    const query = await this.transactionRepository
+    const query = this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoin('transaction.category', 'category')
       .leftJoin('transaction.fromWallet', 'fromWallet')
@@ -256,15 +254,15 @@ export class TransactionsService {
       id: transactionId,
     });
 
+    if (!response) {
+      throw new NotFoundException('Transaction not found');
+    }
+
     // For Get Fee if exists
     const subTransaction = await this.transactionRepository.findOneBy({
       user_id: userId,
       parent_transaction_id: transactionId,
     });
-
-    if (!response) {
-      throw new NotFoundException('Transaction not found');
-    }
 
     return {
       ...response,
@@ -273,74 +271,77 @@ export class TransactionsService {
   }
 
   async delete(transactionId: string, user_id: string): Promise<void> {
-    const categoryTransaction = await this.transactionRepository.findOneBy({
+    const transaction = await this.transactionRepository.findOneBy({
       id: transactionId,
       user_id,
     });
 
-    if (!categoryTransaction) {
+    if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
 
-    const wallets = await this.walletRepository.findBy({ user_id });
-
-    // Reduce balances for "from_wallet"
-    const fromWallet = wallets.find(
-      (w) => w.id === categoryTransaction.from_wallet,
-    );
-    if (fromWallet) {
-      fromWallet.balance += categoryTransaction.money || 0;
-    }
-
-    // Increase balances for "to_wallet"
-    const toWallet = wallets.find(
-      (w) => w.id === categoryTransaction.to_wallet,
-    );
-    if (toWallet) {
-      toWallet.balance -= categoryTransaction.money || 0;
-    }
-
-    // Update Balance Wallet
-    if (wallets.length > 0) {
-      await this.walletRepository.save(wallets);
-    }
-
-    await this.transactionRepository.delete({
-      id: transactionId,
-      user_id,
-    });
-
+    // Get the sub-transaction (fee) BEFORE deleting the main transaction
     const subTransaction = await this.transactionRepository.findOneBy({
       user_id,
       parent_transaction_id: transactionId,
     });
 
-    // Handle Sub Transaction
-    if (subTransaction?.id) {
-      // Reduce balances for "from_wallet"
-      const fromWallet = wallets.find(
-        (w) => w.id === subTransaction.from_wallet,
-      );
-      if (fromWallet) {
-        fromWallet.balance += subTransaction.money || 0;
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const wallets = await transactionalEntityManager.find(Wallet, {
+        where: { user_id },
+      });
+
+      // Reverse the main transaction's effect on wallet balances
+      if (transaction.from_wallet) {
+        const fromWallet = wallets.find(
+          (w) => w.id === transaction.from_wallet,
+        );
+        if (fromWallet) {
+          fromWallet.balance += transaction.money || 0;
+        }
       }
 
-      // Increase balances for "to_wallet"
-      const toWallet = wallets.find((w) => w.id === subTransaction.to_wallet);
-      if (toWallet) {
-        toWallet.balance -= subTransaction.money || 0;
+      if (transaction.to_wallet) {
+        const toWallet = wallets.find((w) => w.id === transaction.to_wallet);
+        if (toWallet) {
+          toWallet.balance -= transaction.money || 0;
+        }
       }
 
-      // Update Balance Wallet
-      if (wallets.length > 0) {
-        await this.walletRepository.save(wallets);
+      // Reverse the sub-transaction (fee) effect on wallet balances
+      if (subTransaction?.from_wallet) {
+        const fromWallet = wallets.find(
+          (w) => w.id === subTransaction.from_wallet,
+        );
+        if (fromWallet) {
+          fromWallet.balance += subTransaction.money || 0;
+        }
       }
 
-      await this.transactionRepository.delete({
-        id: subTransaction.id,
+      if (subTransaction?.to_wallet) {
+        const toWallet = wallets.find((w) => w.id === subTransaction.to_wallet);
+        if (toWallet) {
+          toWallet.balance -= subTransaction.money || 0;
+        }
+      }
+
+      // Save updated wallet balances
+      await transactionalEntityManager.save(wallets);
+
+      // Delete the sub-transaction (fee) first
+      if (subTransaction?.id) {
+        await transactionalEntityManager.delete(Transactions, {
+          id: subTransaction.id,
+          user_id,
+        });
+      }
+
+      // Delete the main transaction
+      await transactionalEntityManager.delete(Transactions, {
+        id: transactionId,
         user_id,
       });
-    }
+    });
   }
 
   async update(body: UpdateTransactionDto, user_id: string): Promise<void> {
@@ -353,13 +354,14 @@ export class TransactionsService {
       throw new NotFoundException('Transaction not found');
     }
 
-    const categoryTransaction = await this.categoryTransactionsRepository
-      .createQueryBuilder('category')
-      .where('category.type = :type', { type: TransactionsType.FEE_TRANSFER })
-      .getOne();
-
-    // Get Wallet
-    const allWallet = await this.walletRepository.findBy({ user_id });
+    // Get the fee category for fee transactions
+    let categoryTransaction: CategoriesTransactions | null = null;
+    if (body.fee) {
+      categoryTransaction = await this.categoryTransactionsRepository
+        .createQueryBuilder('category')
+        .where('category.type = :type', { type: TransactionsType.FEE_TRANSFER })
+        .getOne();
+    }
 
     // For Get Fee if exists
     const subTransaction = await this.transactionRepository.findOneBy({
@@ -367,118 +369,115 @@ export class TransactionsService {
       parent_transaction_id: body.id,
     });
 
-    const updateWalletBalances = (wallets: Wallet[]) => {
-      // Balikin Transaksi Sebelumnya
-      // Kalau from_wallet = Di tambahkan
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const allWallet = await transactionalEntityManager.find(Wallet, {
+        where: { user_id },
+      });
+
+      // === Reverse the previous transaction's effect on wallet balances ===
+
+      // Reverse: add back to from_wallet
       if (transaction.from_wallet) {
-        const wallet = wallets.find((w) => w.id === transaction.from_wallet);
+        const wallet = allWallet.find((w) => w.id === transaction.from_wallet);
         if (wallet) wallet.balance += transaction.money;
       }
 
-      // Kalau to_wallet = Di Kurangi
+      // Reverse: subtract from to_wallet
       if (transaction.to_wallet) {
-        const wallet = wallets.find((w) => w.id === transaction.to_wallet);
+        const wallet = allWallet.find((w) => w.id === transaction.to_wallet);
         if (wallet) wallet.balance -= transaction.money;
       }
 
-      // Kalau ada Fee Transaksi Sebelumnya
-      if (subTransaction?.money && subTransaction?.from_wallet) {
-        const wallet = wallets.find((w) => w.id === subTransaction.from_wallet);
+      // Reverse previous fee sub-transaction if it existed
+      if (subTransaction?.from_wallet) {
+        const wallet = allWallet.find(
+          (w) => w.id === subTransaction.from_wallet,
+        );
         if (wallet) wallet.balance += subTransaction.money;
       }
 
-      // Update Transaksi Baru
-      // Kalau from_wallet = Dikurangi
+      // === Apply the new transaction's effect on wallet balances ===
+
+      // Deduct from new from_wallet
       if (body.from_wallet) {
-        const wallet = wallets.find((w) => w.id === body.from_wallet);
+        const wallet = allWallet.find((w) => w.id === body.from_wallet);
         if (wallet) wallet.balance -= body.money;
       }
 
-      // Kalau to_wallet = Ditambahi
+      // Add to new to_wallet
       if (body.to_wallet) {
-        const wallet = wallets.find((w) => w.id === body.to_wallet);
+        const wallet = allWallet.find((w) => w.id === body.to_wallet);
         if (wallet) wallet.balance += body.money;
       }
 
-      // Kalau Ada Fee
+      // Deduct fee from from_wallet
       if (body.fee > 0 && body.from_wallet) {
-        const wallet = wallets.find((w) => w.id === body.from_wallet);
+        const wallet = allWallet.find((w) => w.id === body.from_wallet);
         if (wallet) wallet.balance -= body.fee;
       }
 
-      return wallets;
-    };
+      // Save updated wallet balances
+      await transactionalEntityManager.save(allWallet);
 
-    const updatedWallets = updateWalletBalances(allWallet);
-    // Update Balance Wallet
-    await this.walletRepository.save(updatedWallets);
+      // === Update the main transaction ===
 
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
+      const updatedTransaction = new Transactions();
+      updatedTransaction.id = body.id;
+      updatedTransaction.user_id = user_id;
+      updatedTransaction.category_id = body.category_id;
+      updatedTransaction.name = body.name;
+      updatedTransaction.description = body.description;
+      updatedTransaction.parent_transaction_id = null;
+      updatedTransaction.money = body.money;
+      updatedTransaction.date = body.date;
+      updatedTransaction.from_wallet = body.from_wallet;
+      updatedTransaction.to_wallet = body.to_wallet;
 
-    // Jika Punya Fee sebelumnya
-    if (subTransaction?.money && body.fee) {
-      const feeObject = {
-        ...body,
-        id: subTransaction.id,
-        category_id: categoryTransaction.id,
-        parent_transaction_id: body.id,
-        money: body.fee,
-        date: body.date,
-        to_wallet: null,
-      };
+      await transactionalEntityManager.save(updatedTransaction);
 
-      await this.transactionRepository.save([body, feeObject]);
-    }
+      // === Handle fee sub-transaction ===
 
-    // Jika Tidak Punya Fee sebelumnya
-    if (!subTransaction?.money && body.fee) {
-      const id = uuidv4();
-      const feeObject = {
-        ...body,
-        id,
-        user_id,
-        category_id: categoryTransaction.id,
-        description: null,
-        parent_transaction_id: body.id,
-        money: body.fee,
-        to_wallet: null,
-      };
+      if (subTransaction?.id && body.fee) {
+        // Update existing fee sub-transaction
+        const feeTransaction = new Transactions();
+        feeTransaction.id = subTransaction.id;
+        feeTransaction.user_id = user_id;
+        feeTransaction.category_id = categoryTransaction!.id;
+        feeTransaction.name = body.name;
+        feeTransaction.description = null;
+        feeTransaction.parent_transaction_id = body.id;
+        feeTransaction.money = body.fee;
+        feeTransaction.date = body.date;
+        feeTransaction.from_wallet = body.from_wallet;
+        feeTransaction.to_wallet = null;
 
-      const transactions = [body, feeObject].map((item) => {
-        const transaction = new Transactions();
-        transaction.id = item.id;
-        transaction.user_id = user_id;
-        transaction.category_id = item.category_id;
-        transaction.name = item.name;
-        transaction.description = item.description;
-        transaction.parent_transaction_id = item.parent_transaction_id;
-        transaction.money = item.money;
-        transaction.date = item.date;
-        transaction.from_wallet = item.from_wallet;
-        transaction.to_wallet = item.to_wallet;
-        return transaction;
-      });
+        await transactionalEntityManager.save(feeTransaction);
+      }
 
-      const feeTransaction = this.transactionRepository.create(transactions);
-      await this.transactionRepository.save(feeTransaction);
-    }
+      if (!subTransaction?.id && body.fee) {
+        // Create new fee sub-transaction
+        const feeTransaction = new Transactions();
+        feeTransaction.id = uuidv4();
+        feeTransaction.user_id = user_id;
+        feeTransaction.category_id = categoryTransaction!.id;
+        feeTransaction.name = body.name;
+        feeTransaction.description = null;
+        feeTransaction.parent_transaction_id = body.id;
+        feeTransaction.money = body.fee;
+        feeTransaction.date = body.date;
+        feeTransaction.from_wallet = body.from_wallet;
+        feeTransaction.to_wallet = null;
 
-    if (subTransaction?.money && !body.fee) {
-      // Hapus SubTransaction
-      await this.transactionRepository.delete({
-        id: subTransaction.id,
-        user_id,
-      });
-      await this.transactionRepository.save(body);
-    }
+        await transactionalEntityManager.save(feeTransaction);
+      }
 
-    if (!subTransaction?.money && !body.fee) {
-      await this.transactionRepository.save({
-        ...body,
-        parent_transaction_id: null,
-      });
-    }
+      if (subTransaction?.id && !body.fee) {
+        // Remove existing fee sub-transaction
+        await transactionalEntityManager.delete(Transactions, {
+          id: subTransaction.id,
+          user_id,
+        });
+      }
+    });
   }
 }

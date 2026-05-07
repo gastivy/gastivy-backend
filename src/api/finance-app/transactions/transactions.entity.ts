@@ -21,7 +21,7 @@ export class Transactions {
   @Column({ type: 'uuid' })
   category_id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   parent_transaction_id: string;
 
   @Column({ type: 'varchar', length: 30 })
@@ -38,10 +38,10 @@ export class Transactions {
   @Column({ type: 'timestamptz' })
   date: Date;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   from_wallet: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   to_wallet: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
