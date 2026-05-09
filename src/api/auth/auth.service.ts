@@ -99,7 +99,7 @@ export class AuthService {
       secure: IS_PRODUCTION,
       sameSite: 'lax',
       path: '/',
-      domain: !IS_PRODUCTION ? 'localhost' : '.gastivy.my.id',
+      domain: !IS_PRODUCTION ? 'localhost' : '.gannaprasetya.com',
       expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
     });
 
@@ -109,7 +109,7 @@ export class AuthService {
       secure: IS_PRODUCTION,
       sameSite: 'lax',
       path: '/',
-      domain: !IS_PRODUCTION ? 'localhost' : '.gastivy.my.id',
+      domain: !IS_PRODUCTION ? 'localhost' : '.gannaprasetya.com',
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
@@ -150,13 +150,13 @@ export class AuthService {
   async logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie(KEY_ACCESS_TOKEN, {
       path: '/',
-      domain: '.gastivy.my.id',
+      domain: '.gannaprasetya.com',
       sameSite: 'none',
       secure: true,
     });
     res.clearCookie(KEY_REFRESH_TOKEN, {
       path: '/',
-      domain: '.gastivy.my.id',
+      domain: '.gannaprasetya.com',
       sameSite: 'none',
       secure: true,
     });
