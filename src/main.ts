@@ -20,6 +20,7 @@ async function bootstrap() {
       'https://stg-lyceum.gastivy.my.id',
       'https://www.stg-lyceum.gastivy.my.id',
       'https://www.super-gastivy.gannaprasetya.com',
+      'https://super-gastivy.gannaprasetya.com',
     ],
     methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
