@@ -15,6 +15,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
+      'http://localhost:7100',
       'https://stg-lyceum.gannaprasetya.com',
       'https://www.stg-lyceum.gannaprasetya.com',
       'https://www.super-gastivy.gannaprasetya.com',
